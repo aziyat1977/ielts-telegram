@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IELTS Speaking Part 1 - Neon Academy</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;900&family=Space+Grotesk:wght@700&display=swap"
+        rel="stylesheet">
+
+    <!-- Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+    <style>
+        :root {
+            --bg-dark: #030014;
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --primary: #00f3ff;
+            /* Neon Cyan */
+            --secondary: #bc13fe;
+            /* Neon Purple */
+            --accent: #ff0055;
+            /* Neon Pink */
+            --text: #ffffff;
+            --text-dim: #94a3b8;
+            --font-main: 'Outfit', sans-serif;
+            --font-display: 'Space Grotesk', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text);
+            font-family: var(--font-main);
+            overflow: hidden;
+            /* 3D canvas handles bg */
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* 3D Canvas Layer */
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: all;
+            /* Allow interaction with 3D scene */
+        }
+
+        /* UI Layer */
+        #ui-layer {
+            position: relative;
+            z-index: 10;
+            height: 100%;
+            width: 100%;
+            pointer-events: none;
+            /* Let clicks pass through to canvas where needed */
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Pointer events restoration for interactive UI elements */
+        .interactive {
+            pointer-events: auto;
+        }
+
+        /* Glassmorphism Utilities */
+        .glass-panel {
+            background: var(--glass);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        /* Typography */
+        h1,
+        h2,
+        h3,
+        h4 {
+            font-family: var(--font-display);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Loading Screen */
+        #loader {
+            position: fixed;
+            inset: 0;
+            background: var(--bg-dark);
+            z-index: 999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.5s ease;
+        }
+
+        .loader-text {
+            font-family: var(--font-display);
+            font-size: 2rem;
+            color: var(--primary);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+                text-shadow: 0 0 20px var(--primary);
+            }
+
+            50% {
+                opacity: 0.5;
+                text-shadow: 0 0 5px var(--primary);
+            }
+        }
+
+        /* Main Layout - Bento Grid */
+        .main-container {
+            padding: 2rem;
+            height: 100%;
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 2rem;
+            opacity: 0;
+            /* Hidden initially for GSAP reveal */
+        }
+
+        /* Sidebar */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .brand {
+            font-size: 1.5rem;
+            font-weight: 900;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-btn {
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-dim);
+            padding: 1rem;
+            text-align: left;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: var(--font-display);
+            text-transform: uppercase;
+        }
+
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text);
+        }
+
+        .nav-btn.active {
+            background: rgba(0, 243, 255, 0.1);
+            border-color: var(--primary);
+            color: var(--primary);
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.2);
+        }
+
+        /* Content Area */
+        .content-area {
+            display: grid;
+            grid-template-rows: auto 1fr;
+            gap: 1.5rem;
+            overflow: hidden;
+        }
+
+        /* Navigation / Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* View Container */
+        .view-container {
+            position: relative;
+            height: 100%;
+            width: 100%;
+        }
+
+        .view {
+            position: absolute;
+            inset: 0;
+            display: none;
+            /* Managed by JS */
+            flex-direction: column;
+        }
+
+        .view.active {
+            display: flex;
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .main-container {
+                grid-template-columns: 1fr;
+                padding: 1rem;
+            }
+
+            .sidebar {
+                display: none;
+                /* Mobile menu to be added later */
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Loading Screen -->
+    <div id="loader">
+        <div class="loader-text">INITIALIZING NEON ACADEMY...</div>
+    </div>
+
+    <!-- 3D Background -->
+    <div id="canvas-container"></div>
+
+    <!-- Main UI -->
+    <div id="ui-layer">
+        <div class="main-container interactive">
+
+            <!-- Sidebar -->
+            <aside class="sidebar glass-panel" style="padding: 2rem;">
+                <div class="brand">IELTS 3D</div>
+
+                <nav style="display: flex; flex-direction: column; gap: 1rem;">
+                    <button class="nav-btn active" onclick="app.nav('dashboard')">Dashboard</button>
+                    <button class="nav-btn" onclick="app.nav('practice')">Practice</button>
+                    <button class="nav-btn">Lessons</button>
+                    <button class="nav-btn">Profile</button>
+                </nav>
+
+                <div style="margin-top: auto;">
+                    <div style="font-size: 0.8rem; color: var(--text-dim);">LEVEL 5</div>
+                    <div
+                        style="height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; margin-top: 0.5rem; overflow: hidden;">
+                        <div
+                            style="height: 100%; width: 60%; background: var(--primary); box-shadow: 0 0 10px var(--primary);">
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="content-area">
+                <header class="header glass-panel" style="padding: 1rem 2rem;">
+                    <h2>Dashboard</h2>
+                    <div style="display: flex; gap: 1rem; align-items: center;">
+                        <span>🔥 12 Day Streak</span>
+                        <div style="width: 40px; height: 40px; background: var(--secondary); border-radius: 50%;"></div>
+                    </div>
+                </header>
+
+                <div class="view-container glass-panel" style="padding: 2rem; position: relative; overflow: hidden;">
+
+                    <!-- Dashboard View -->
+                    <div id="view-dashboard" class="view active">
+                        <h3>Welcome back, Aziyat.</h3>
+                        <div
+                            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-top: 2rem;">
+                            <div class="glass-panel interactive" onclick="app.startPractice('random')"
+                                style="padding: 1.5rem; background: rgba(0, 243, 255, 0.1); border-color: var(--primary); cursor: pointer; transition: transform 0.2s;">
+                                <h4>Random Mix</h4>
+                                <p style="font-size: 0.9rem; color: var(--text-dim); margin: 0.5rem 0 1rem;">Full chaos
+                                    mode. Any topic, any time.</p>
+                                <button
+                                    style="background: var(--primary); color: #000; border: none; padding: 0.5rem 1.5rem; font-weight: bold; border-radius: 99px; cursor: pointer;">START
+                                    ▶</button>
+                            </div>
+                            <div class="glass-panel" style="padding: 1.5rem;">
+                                <h4>Weak Spots</h4>
+                                <p style="font-size: 0.9rem; color: var(--text-dim); margin: 0.5rem 0 1rem;">Focus on
+                                    "Hometown" and "Work".</p>
+                            </div>
+                            <div class="glass-panel" style="padding: 1.5rem;">
+                                <h4>Recent Score</h4>
+                                <div style="font-size: 2.5rem; font-weight: 900; color: var(--secondary);">8.0</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Practice View -->
+                    <div id="view-practice" class="view"
+                        style="justify-content: center; align-items: center; text-align: center;">
+                        <div style="position: absolute; top: 1rem; left: 1rem;">
+                            <button onclick="app.nav('dashboard')" class="interactive"
+                                style="background: none; border: 1px solid var(--glass-border); color: var(--text-dim); padding: 0.5rem 1rem; border-radius: 12px; cursor: pointer;">←
+                                Exit</button>
+                        </div>
+
+                        <div style="margin-bottom: 2rem;">
+                            <span id="p-topic"
+                                style="color: var(--primary); font-weight: bold; letter-spacing: 0.1em; text-transform: uppercase;">TOPIC</span>
+                            <h2 id="p-question"
+                                style="font-size: 2.5rem; margin: 1rem 0; max-width: 800px; line-height: 1.2;">
+                                Loading...</h2>
+                            <p id="p-hint" style="color: var(--text-dim); font-size: 1.1rem; min-height: 1.5em;"></p>
+                        </div>
+
+                        <!-- 3D Audio Visualizer Container -->
+                        <div id="visualizer-area"
+                            style="width: 100%; height: 150px; position: relative; margin-bottom: 2rem;">
+                            <div
+                                style="color: var(--text-dim); font-size: 0.8rem; position: absolute; bottom: 0; width: 100%;">
+                                Voice Visualization Area</div>
+                        </div>
+
+                        <div class="controls interactive" style="display: flex; gap: 1rem; justify-content: center;">
+                            <button onclick="app.toggleHint()"
+                                style="background: var(--glass); border: 1px solid var(--glass-border); color: var(--text); padding: 1rem 2rem; border-radius: 99px; cursor: pointer;">💡
+                                Hint</button>
+                            <button id="btn-record" onclick="app.toggleRecord()"
+                                style="background: var(--accent); border: none; color: white; padding: 1rem 3rem; border-radius: 99px; font-weight: bold; font-size: 1.1rem; cursor: pointer; box-shadow: 0 0 20px var(--accent);">🎙️
+                                Record</button>
+                            <button onclick="app.nextQuestion()"
+                                style="background: var(--glass); border: 1px solid var(--glass-border); color: var(--text); padding: 1rem 2rem; border-radius: 99px; cursor: pointer;">Next
+                                ▶</button>
+                        </div>
+                    </div>
+
+                </div>
+            </main>
+
+        </div>
+    </div>
+
+    <script>
+        // --- DATA ---
+        const questions = {
+            work: [
+                { q: "What is your job?", hint: "Describe your current occupation and role." },
+                { q: "Where do you work?", hint: "Mention the company or type of workplace." },
+                { q: "Why did you choose that job?", hint: "Explain what attracted you to this career." },
+                { q: "Is it a popular job in your country?", hint: "Discuss how common this profession is." },
+                { q: "Do you like your job?", hint: "Share your feelings about your work." },
+                { q: "Do you get on well with your colleagues?", hint: "Talk about your workplace relationships." },
+                { q: "What responsibilities do you have at work?", hint: "List your main duties and tasks." },
+                { q: "Do you plan to continue with your job in the future?", hint: "Discuss your career plans." }
+            ],
+            study: [
+                { q: "What do you study?", hint: "Name your subject or field of study." },
+                { q: "Where do you study?", hint: "Mention your school, college, or university." },
+                { q: "Why did you choose that subject?", hint: "Explain your motivation for this field." },
+                { q: "Is it a popular subject in your country?", hint: "Discuss how common this field is." },
+                { q: "Do you like your subject?", hint: "Share your feelings about what you study." },
+                { q: "What are the main aspects of your subject?", hint: "Describe key areas you focus on." },
+                { q: "Do you plan to get a job in the same field?", hint: "Talk about your career plans." }
+            ],
+            hometown: [
+                { q: "Where is your hometown?", hint: "Name the city/town and location." },
+                { q: "Do you like your hometown?", hint: "Share your feelings about it." },
+                { q: "Do you often visit your hometown?", hint: "Explain how frequently you go back." },
+                { q: "What is your hometown like?", hint: "Describe the atmosphere and character." },
+                { q: "What is the oldest place in your hometown?", hint: "Mention historical sites or buildings." },
+                { q: "Has your hometown changed much since you were a child?", hint: "Describe any major developments." },
+                { q: "Is there good public transportation in your hometown?", hint: "Talk about transit options." },
+                { q: "Do you think your hometown is a good place to bring up children?", hint: "Discuss family-friendly aspects." }
+            ],
+            home: [
+                { q: "Do you live in a house or a flat?", hint: "Describe your type of accommodation." },
+                { q: "Who do you live with?", hint: "Mention family, roommates, or if you live alone." },
+                { q: "What is your favourite room?", hint: "Name a room and explain why you like it." },
+                { q: "How are the walls decorated?", hint: "Describe colors, pictures, or decorations." },
+                { q: "What would you change about your home?", hint: "Suggest improvements you'd like." },
+                { q: "Do you plan to live there in the future?", hint: "Discuss your living plans." },
+                { q: "What is your neighbourhood like?", hint: "Describe the surrounding area." },
+                { q: "Do most people live in houses in your country?", hint: "Compare housing types in your country." }
+            ],
+            hobbies: [
+                { q: "Do you have a hobby?", hint: "Name your main leisure activity." },
+                { q: "What equipment do you need for it?", hint: "List necessary tools or items." },
+                { q: "Do you think hobbies should be shared with other people?", hint: "Give your opinion on social hobbies." },
+                { q: "Did you have a hobby as a child?", hint: "Talk about childhood interests." },
+                { q: "What hobbies are popular in your country?", hint: "Mention common leisure activities." },
+                { q: "Why do you think people have hobbies?", hint: "Explain the purpose of hobbies." }
+            ],
+            music: [
+                { q: "Do you like music?", hint: "Share your interest in music." },
+                { q: "What's your favourite type of music?", hint: "Name a genre and explain why." },
+                { q: "Can you sing?", hint: "Talk about your singing ability." },
+                { q: "Did you learn music at school?", hint: "Describe any musical education." },
+                { q: "If you could learn a musical instrument, what would it be?", hint: "Choose an instrument and give reasons." },
+                { q: "Do you think music is important?", hint: "Discuss the value of music in life." }
+            ],
+            food: [
+                { q: "What's your favourite food?", hint: "Name a dish and explain why you like it." },
+                { q: "Have you always liked the same food?", hint: "Discuss changes in your tastes." },
+                { q: "Is there any food you dislike?", hint: "Mention foods you don't enjoy." },
+                { q: "What is a common meal in your country?", hint: "Describe a typical traditional dish." },
+                { q: "Do you have a healthy diet?", hint: "Talk about your eating habits." },
+                { q: "What do you think of fast food?", hint: "Give your opinion on fast food." }
+            ],
+            reading: [
+                { q: "Do you often read?", hint: "Describe your reading frequency." },
+                { q: "What is your favourite kind of book to read?", hint: "Name a genre you prefer." },
+                { q: "Do you often read newspapers?", hint: "Talk about your news reading habits." },
+                { q: "Do you have any e-books?", hint: "Discuss digital vs physical books." },
+                { q: "What books did you read as a child?", hint: "Mention childhood favorites." },
+                { q: "Do you think it is important to encourage children to read?", hint: "Explain the benefits of reading." }
+            ],
+            sport: [
+                { q: "Do you like sport?", hint: "Share your interest in sports." },
+                { q: "What's your favourite sport?", hint: "Name a sport and explain why." },
+                { q: "Do you often watch sport on TV?", hint: "Discuss viewing habits." },
+                { q: "Did you play sport as a child?", hint: "Talk about childhood activities." },
+                { q: "What is the most popular sport in your country?", hint: "Name the national favorite sport." },
+                { q: "How do most people in your country keep fit?", hint: "Describe common fitness activities." }
+            ],
+            technology: [
+                { q: "Do you often use a computer?", hint: "Describe your computer usage." },
+                { q: "How do you usually get online?", hint: "Mention devices and methods." },
+                { q: "What do you use your computer for?", hint: "List main activities." },
+                { q: "Do you think it is important to learn how to use a computer?", hint: "Discuss digital literacy." },
+                { q: "How often do you go online?", hint: "Describe internet usage frequency." },
+                { q: "What's your favourite website?", hint: "Name a site and explain why." }
+            ],
+            weather: [
+                { q: "What's the weather like today?", hint: "Describe current conditions." },
+                { q: "What's your favourite weather?", hint: "Name preferred weather and explain." },
+                { q: "Do you like the weather in your country?", hint: "Share your opinion." },
+                { q: "Does the weather ever affect the way you feel?", hint: "Discuss mood and weather connection." },
+                { q: "Does the weather in your country affect transportation?", hint: "Mention weather-related travel issues." }
+            ],
+            shopping: [
+                { q: "Do you like shopping?", hint: "Share your feelings about shopping." },
+                { q: "What's your favourite shop?", hint: "Name a store and explain why." },
+                { q: "Do you prefer shopping alone or with others?", hint: "Discuss your preference." },
+                { q: "Have you ever bought anything online?", hint: "Talk about online shopping experience." },
+                { q: "Do you think men and women have different opinions about shopping?", hint: "Compare shopping attitudes." }
+            ],
+            tv: [
+                { q: "Do you often watch TV?", hint: "Describe viewing frequency." },
+                { q: "What sorts of things do you watch on TV?", hint: "Name program types." },
+                { q: "What is your favourite TV program?", hint: "Name a show and explain why." },
+                { q: "Do you ever watch foreign programs or films?", hint: "Discuss international content." },
+                { q: "What did you watch on TV when you were a child?", hint: "Mention childhood favorites." },
+                { q: "Do you think children should watch TV?", hint: "Give your opinion on children's viewing." }
+            ],
+            transport: [
+                { q: "How did you get here today?", hint: "Describe your journey method." },
+                { q: "What is your favourite mode of transport?", hint: "Choose and explain your preference." },
+                { q: "Do you ever use public transport?", hint: "Discuss usage frequency." },
+                { q: "Do you like the transport system in your country?", hint: "Give your opinion." },
+                { q: "What is the difference between taking a bus and taking a train?", hint: "Compare the two modes." }
+            ],
+            art: [
+                { q: "Are you good at art?", hint: "Describe your artistic ability." },
+                { q: "Did you learn art at school when you were a child?", hint: "Talk about art education." },
+                { q: "What kind of art do you like?", hint: "Name preferred art forms." },
+                { q: "Is art popular in your country?", hint: "Discuss art appreciation." },
+                { q: "Have you ever been to an art gallery?", hint: "Share gallery experiences." }
+            ],
+            birthdays: [
+                { q: "Do you usually celebrate your birthdays?", hint: "Describe celebration habits." },
+                { q: "How did you celebrate your last birthday?", hint: "Recall recent celebration." },
+                { q: "Which birthdays are the most important in your country?", hint: "Mention milestone ages." },
+                { q: "Do you think children should celebrate birthdays with a party?", hint: "Give your opinion." }
+            ],
+            childhood: [
+                { q: "Did you enjoy your childhood?", hint: "Share overall feelings." },
+                { q: "What is your first memory of your childhood?", hint: "Recall earliest memory." },
+                { q: "Did you have a lot of friends when you were a child?", hint: "Describe childhood friendships." },
+                { q: "What did you enjoy doing as a child?", hint: "Mention favorite activities." }
+            ],
+            clothes: [
+                { q: "What kind of clothes do you usually wear?", hint: "Describe your style." },
+                { q: "Do you ever wear traditional clothes of your country?", hint: "Discuss traditional attire." },
+                { q: "Where do you usually buy your clothes?", hint: "Name shopping locations." },
+                { q: "Have you ever worn a uniform?", hint: "Talk about uniform experience." }
+            ],
+            daily_routine: [
+                { q: "When do you usually get up in the morning?", hint: "State your wake-up time." },
+                { q: "Do you usually have the same routine every day?", hint: "Describe consistency." },
+                { q: "What is your daily routine?", hint: "Outline typical day." },
+                { q: "Do you think it is important to have a daily routine?", hint: "Explain benefits of routine." }
+            ],
+            family_friends: [
+                { q: "Do you spend much time with your family?", hint: "Describe family time." },
+                { q: "Who are you closest to in your family?", hint: "Name a family member." },
+                { q: "Do you prefer spending time with family or friends?", hint: "State your preference." },
+                { q: "Who is your best friend?", hint: "Describe your best friend." },
+                { q: "Is family important in your country?", hint: "Discuss family values." }
+            ],
+            flowers: [
+                { q: "Do you like flowers?", hint: "Share your feelings about flowers." },
+                { q: "What's your favourite flower?", hint: "Name a flower and explain." },
+                { q: "When was the last time you gave someone flowers?", hint: "Recall recent occasion." },
+                { q: "Do any flowers have special meaning in your country?", hint: "Mention cultural symbolism." }
+            ],
+            happiness: [
+                { q: "Are you a happy person?", hint: "Describe your general mood." },
+                { q: "What usually makes you happy?", hint: "List sources of joy." },
+                { q: "Does the weather ever affect how you feel?", hint: "Discuss weather's impact on mood." },
+                { q: "What makes you smile?", hint: "Mention things that bring joy." }
+            ],
+            internet: [
+                { q: "How often do you go online?", hint: "Describe frequency." },
+                { q: "What do you use the internet for?", hint: "List main activities." },
+                { q: "How do you get online?", hint: "Mention devices used." },
+                { q: "Do you think children should have unsupervised internet access?", hint: "Give your opinion on child safety." }
+            ],
+            leisure_time: [
+                { q: "What is your favourite leisure activity?", hint: "Name your preferred pastime." },
+                { q: "What did you enjoy doing in your free time as a child?", hint: "Recall childhood activities." },
+                { q: "Do you prefer to spend free time alone or with others?", hint: "State your preference." },
+                { q: "Do you think leisure time is important?", hint: "Discuss the value of relaxation." }
+            ],
+            neighbours: [
+                { q: "Do you like your neighbours?", hint: "Share your feelings." },
+                { q: "Are neighbours usually close to each other in your country?", hint: "Describe typical relationships." },
+                { q: "What is your neighbourhood like?", hint: "Describe your area." },
+                { q: "Do you think it is important to have a good relationship with neighbours?", hint: "Explain the benefits." }
+            ],
+            pets: [
+                { q: "Do you have a pet?", hint: "State if you have one." },
+                { q: "Do you like animals?", hint: "Share your feelings about animals." },
+                { q: "What's your favourite animal?", hint: "Name an animal and explain." },
+                { q: "What is a popular pet in your country?", hint: "Mention common pets." },
+                { q: "Why do people have pets?", hint: "Discuss reasons for pet ownership." }
+            ],
+            patience: [
+                { q: "Are you a patient person?", hint: "Describe your patience level." },
+                { q: "Do you ever get impatient?", hint: "Give examples of when." },
+                { q: "When was the last time you lost your patience?", hint: "Recall a recent incident." },
+                { q: "Which person in your family is the most patient?", hint: "Name a family member." }
+            ],
+            dreams: [
+                { q: "Do you often have dreams when you sleep?", hint: "Describe dream frequency." },
+                { q: "Do you usually remember your dreams?", hint: "Talk about dream recall." },
+                { q: "Do you ever have daydreams?", hint: "Discuss daydreaming habits." },
+                { q: "What kind of daydreams do you usually have?", hint: "Describe typical daydreams." }
+            ],
+            random: [] // Populated on init
+        };
+
+        // Populate random mix
+        Object.keys(questions).forEach(k => {
+            if (k !== 'random') questions.random.push(...questions[k]);
+        });
+
+        // --- APP LOGIC ---
+        const app = {
+            state: {
+                view: 'dashboard',
+                topic: 'random',
+                list: [],
+                index: 0,
+                recording: false
+            },
+
+            nav(view) {
+                document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+                document.getElementById(`view-${view}`).classList.add('active');
+                this.state.view = view;
+
+                // GSAP Transition
+                if (window.gsap) {
+                    gsap.from(`#view-${view} > *`, { y: 20, opacity: 0, duration: 0.4, stagger: 0.1 });
+                }
+            },
+
+            startPractice(topic) {
+                this.state.topic = topic;
+                this.state.list = [...questions[topic]].sort(() => Math.random() - 0.5);
+                this.state.index = 0;
+                this.nav('practice');
+                this.renderQuestion();
+            },
+
+            renderQuestion() {
+                const item = this.state.list[this.state.index];
+                document.getElementById('p-topic').textContent = this.state.topic.replace('_', ' ');
+                document.getElementById('p-question').textContent = item.q;
+                document.getElementById('p-hint').textContent = ""; // Hide hint initially
+                document.getElementById('p-hint').dataset.text = item.hint;
+            },
+
+            nextQuestion() {
+                this.state.index = (this.state.index + 1) % this.state.list.length;
+                this.renderQuestion();
+
+                // 3D Effect: Spin shapes on next question
+                shapes.forEach(s => {
+                    if (window.gsap) {
+                        gsap.to(s.mesh.rotation, { x: "+=1", y: "+=1", duration: 1, ease: "power2.out" });
+                    }
+                });
+            },
+
+            toggleHint() {
+                const el = document.getElementById('p-hint');
+                el.textContent = el.textContent ? "" : el.dataset.text;
+            },
+
+            toggleRecord() {
+                this.state.recording = !this.state.recording;
+                const btn = document.getElementById('btn-record');
+
+                if (this.state.recording) {
+                    btn.textContent = "⏹ Stop";
+                    btn.style.background = "#ff0000";
+                    visualizer.start();
+                } else {
+                    btn.textContent = "🎙️ Record";
+                    btn.style.background = "var(--accent)";
+                    visualizer.stop();
+                }
+            }
+        };
+
+        // --- 3D AUDIO VISUALIZER (Placeholder Logic) ---
+        const visualizer = {
+            active: false,
+            start() {
+                this.active = true;
+            },
+            stop() {
+                this.active = false;
+                // Reset shapes
+                shapes.forEach(s => s.mesh.scale.set(1, 1, 1));
+            }
+        };
+
+        // --- 3D SCENE SETUP ---
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+        // Floating Shapes
+        const geometry = new THREE.IcosahedronGeometry(1, 0);
+        const material = new THREE.MeshStandardMaterial({
+            wireframe: true,
+            color: 0xffffff,
+            emissive: 0x00f3ff,
+            emissiveIntensity: 0.2
+        });
+        const shapes = [];
+
+        // Add lighting for MeshStandardMaterial
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        scene.add(ambientLight);
+        const pointLight = new THREE.PointLight(0x00f3ff, 1, 100);
+        pointLight.position.set(0, 0, 10);
+        scene.add(pointLight);
+
+        for (let i = 0; i < 20; i++) {
+            const mesh = new THREE.Mesh(geometry, material.clone());
+            mesh.position.set(
+                (Math.random() - 0.5) * 20,
+                (Math.random() - 0.5) * 20,
+                (Math.random() - 0.5) * 10 - 5
+            );
+            mesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0);
+            scene.add(mesh);
+            shapes.push({
+                mesh,
+                rotSpeed: { x: Math.random() * 0.02, y: Math.random() * 0.02 }
+            });
+        }
+
+        camera.position.z = 5;
+
+        // Animation Loop
+        function animate() {
+            requestAnimationFrame(animate);
+
+            const time = Date.now() * 0.0005;
+
+            shapes.forEach((item, i) => {
+                item.mesh.rotation.x += item.rotSpeed.x;
+                item.mesh.rotation.y += item.rotSpeed.y;
+
+                // Visualizer Effect
+                if (visualizer.active) {
+                    // Simulate frequency data
+                    const freq = Math.sin(time * 10 + i) * 0.5 + 0.5;
+                    const scale = 1 + freq * 0.5; // Pulse effect
+                    item.mesh.scale.set(scale, scale, scale);
+                    item.mesh.material.wireframe = false; // Solid when active
+                    item.mesh.material.emissive.setHSL(time * 0.1 + i * 0.05, 1, 0.5);
+                    item.mesh.material.emissiveIntensity = 1;
+                } else {
+                    // Idle state
+                    item.mesh.scale.lerp(new THREE.Vector3(1, 1, 1), 0.1);
+                    item.mesh.material.wireframe = true;
+                    item.mesh.material.emissive.setRGB(0, 0.95, 1);
+                    item.mesh.material.emissiveIntensity = 0.2;
+                }
+            });
+
+            // Gentle camera movement
+            camera.position.x = Math.sin(time) * 0.5;
+            camera.position.y = Math.cos(time) * 0.5;
+            camera.lookAt(0, 0, 0);
+
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // Resize Handler
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // --- UI REVEAL ---
+        window.addEventListener('load', () => {
+            const loader = document.getElementById('loader');
+
+            if (window.gsap) {
+                const tl = gsap.timeline();
+                tl.to('#loader', { opacity: 0, duration: 0.5, onComplete: () => loader.remove() })
+                    .to('.main-container', { opacity: 1, duration: 1 })
+                    .from('.glass-panel', {
+                        y: 50,
+                        opacity: 0,
+                        duration: 0.8,
+                        stagger: 0.1,
+                        ease: "back.out(1.7)"
+                    }, "-=0.5");
+            } else {
+                // Fallback if GSAP fails
+                loader.style.display = 'none';
+                document.querySelector('.main-container').style.opacity = 1;
+            }
+        });
+
+        // Fallback timeout in case load event doesn't fire or hangs
+        setTimeout(() => {
+            const loader = document.getElementById('loader');
+            if (loader && loader.isConnected) {
+                loader.style.opacity = 0;
+                setTimeout(() => loader.remove(), 500);
+                document.querySelector('.main-container').style.opacity = 1;
+            }
+        }, 3000);
+
+    </script>
+</body>
+
+</html>

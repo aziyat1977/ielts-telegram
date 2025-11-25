@@ -1,0 +1,1644 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>IELTS Speaking Part 1 Trainer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        /* ==== FONTS & THEME ==== */
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&family=Bebas+Neue&display=swap');
+
+        :root {
+            --bg-main: #120638;
+            --bg-light: #312e81;
+            --primary: #f97316;
+            --accent: #22c55e;
+            --text: #ffffff;
+            --font: 'Montserrat', system-ui, -apple-system, sans-serif;
+        }
+
+        html {
+            font-size: 18px;
+            /* Slightly adjusted for better scaling */
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            margin: 0;
+            background-color: var(--bg-main);
+            background-image:
+                radial-gradient(circle at 10% 0%, #4c1d95 0%, transparent 55%),
+                radial-gradient(circle at 90% 0%, #f97316 0%, transparent 40%),
+                radial-gradient(circle at 50% 100%, #22c55e 0%, transparent 55%);
+            color: var(--text);
+            font-family: var(--font), sans-serif;
+            line-height: 1.6;
+            min-height: 100vh;
+            /* Fixed: min-height allows scrolling without cutting bg */
+            overflow: hidden;
+            /* Main scroll handled by views */
+            display: flex;
+        }
+
+        h1,
+        h2,
+        h3,
+        .brand {
+            font-family: 'Bebas Neue', 'Montserrat', sans-serif;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            margin-top: 0;
+        }
+
+        h1 {
+            font-size: 2.7em;
+        }
+
+        h2 {
+            font-size: 2.1em;
+        }
+
+        h3 {
+            font-size: 1.7em;
+        }
+
+        /* ==== SIDEBAR ==== */
+        .sidebar {
+            width: 300px;
+            background: rgba(0, 0, 0, 0.35);
+            backdrop-filter: blur(12px);
+            padding: 18px 18px 24px;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid rgba(148, 163, 184, 0.4);
+            z-index: 100;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+
+        .brand {
+            font-size: 26px;
+            text-align: center;
+            color: var(--accent);
+            text-shadow: 0 0 15px rgba(245, 158, 11, 0.4);
+            margin-bottom: 18px;
+            cursor: pointer;
+        }
+
+        .mode-toggle {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .mode-pill {
+            flex: 1;
+            border-radius: 999px;
+            border: none;
+            padding: 6px 10px;
+            font-size: 0.75em;
+            font-weight: 700;
+            cursor: pointer;
+            background: rgba(15, 23, 42, 0.8);
+            color: #e5e7eb;
+            box-shadow: 0 3px 0 rgba(15, 23, 42, 0.9);
+            transition: transform 0.1s, box-shadow 0.1s, background 0.2s;
+        }
+
+        .mode-pill:hover {
+            transform: translateY(-1px);
+        }
+
+        .mode-pill:active {
+            transform: translateY(2px);
+            box-shadow: 0 1px 0 rgba(15, 23, 42, 0.9);
+        }
+
+        .mode-pill.active {
+            background: linear-gradient(135deg, var(--accent), var(--primary));
+            color: #020617;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.7);
+        }
+
+        .menu-label {
+            margin: 18px 0 10px 8px;
+            font-size: 11px;
+            text-transform: uppercase;
+            opacity: 0.7;
+            font-weight: 700;
+            letter-spacing: .16em;
+        }
+
+        .menu-item {
+            padding: 11px 14px;
+            margin: 4px 0;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            transition: 0.18s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: rgba(226, 232, 240, 0.9);
+            border: 1px solid transparent;
+            background: rgba(15, 23, 42, 0.55);
+        }
+
+        .menu-item:hover {
+            background: rgba(79, 70, 229, 0.7);
+            color: white;
+        }
+
+        .menu-item.active {
+            background: radial-gradient(circle at 0 0, rgba(244, 244, 245, 0.35), rgba(79, 70, 229, 0.9));
+            color: white;
+            border-color: rgba(129, 140, 248, 0.9);
+            box-shadow: 0 0 18px rgba(129, 140, 248, 0.6);
+        }
+
+        /* ==== MAIN STAGE & VIEWS ==== */
+        .main-stage {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .view {
+            position: absolute;
+            inset: 0;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            /* Fixed: Changed justify-content to allow scrolling long content without clipping top */
+            justify-content: flex-start;
+            padding: 40px;
+            overflow-y: auto;
+            /* Enable scrolling within the view */
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+        }
+
+        /* Centering helper for Home View specifically */
+        #view-home {
+            justify-content: center;
+        }
+
+        .view.active {
+            display: flex;
+            animation: popIn 0.4s ease-out;
+        }
+
+        /* Container margins to handle scrolling nicely */
+        .card,
+        .q-shell,
+        .lesson-content {
+            margin: auto;
+            /* Keeps it centered if small, scrollable if large */
+        }
+
+        .card,
+        .q-shell,
+        .lesson-content {
+            background: white;
+            color: #1e293b;
+            border-radius: 24px;
+            padding: 36px 40px;
+            max-width: 960px;
+            width: 100%;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.55);
+            position: relative;
+            transform-style: preserve-3d;
+            transform: translateZ(0);
+            transition: transform 0.4s ease, box-shadow 0.4s ease, background 0.3s ease;
+        }
+
+        .card::before,
+        .q-shell::before,
+        .lesson-content::before {
+            content: "";
+            position: absolute;
+            inset: -2px;
+            border-radius: inherit;
+            background: radial-gradient(circle at 0 0, rgba(250, 204, 21, 0.35), transparent 55%);
+            opacity: 0;
+            transform: translateZ(-1px);
+            transition: opacity 0.4s ease;
+            pointer-events: none;
+        }
+
+        .card:hover,
+        .q-shell:hover,
+        .lesson-content:hover {
+            transform: translate3d(0, -5px, 25px);
+            /* Reduced rotation for better text readability */
+            box-shadow: 0 32px 80px rgba(0, 0, 0, 0.8);
+        }
+
+        .card:hover::before,
+        .q-shell:hover::before,
+        .lesson-content:hover::before {
+            opacity: 1;
+        }
+
+        .home-card-main {
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), var(--primary));
+            color: #020617;
+            border: none;
+            padding: 18px 36px;
+            font-size: 1.1em;
+            font-weight: 900;
+            border-radius: 999px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: transform 0.12s, box-shadow 0.12s, filter 0.2s;
+            box-shadow: 0 12px 0 #b45309, 0 28px 40px rgba(0, 0, 0, 0.6);
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            outline: none;
+        }
+
+        .btn-primary:hover {
+            filter: brightness(1.05);
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 14px 0 #b45309, 0 32px 50px rgba(0, 0, 0, 0.8);
+        }
+
+        .btn-primary:active {
+            transform: translateY(4px) scale(.98);
+            box-shadow: 0 4px 0 #b45309, 0 10px 25px rgba(0, 0, 0, 0.7);
+        }
+
+        .pill-btn {
+            border-radius: 999px;
+            border: 1px solid rgba(148, 163, 184, 0.8);
+            padding: 9px 18px;
+            font-size: 0.75em;
+            font-weight: 650;
+            cursor: pointer;
+            background: rgba(15, 23, 42, 0.9);
+            color: #e5e7eb;
+            box-shadow: 0 4px 0 rgba(15, 23, 42, 0.9);
+            transition: transform 0.1s, box-shadow 0.1s, background 0.2s;
+            outline: none;
+        }
+
+        .pill-btn:hover {
+            background: rgba(79, 70, 229, 0.8);
+        }
+
+        .pill-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 1px 0 rgba(15, 23, 42, 0.9);
+        }
+
+        .pill-btn.active {
+            background: #4f46e5;
+            color: white;
+            border-color: rgba(129, 140, 248, 0.9);
+        }
+
+        @keyframes popIn {
+            0% {
+                transform: scale(0.95);
+                opacity: 0;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* ==== PRACTICE VIEW ==== */
+        .q-shell {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .q-topic-label {
+            font-size: 18px;
+            text-transform: uppercase;
+            letter-spacing: 0.18em;
+            color: #6366f1;
+            font-weight: 800;
+        }
+
+        .session-info {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            font-size: 0.75em;
+            color: #111827;
+        }
+
+        .session-info span {
+            cursor: default;
+        }
+
+        #target-band {
+            cursor: pointer;
+            font-weight: 700;
+            color: #f97316;
+            text-decoration: underline;
+            text-decoration-style: dotted;
+        }
+
+        .q-main {
+            font-size: 28px;
+            font-weight: 800;
+            line-height: 1.3;
+        }
+
+        .q-extra {
+            font-size: 18px;
+            color: #64748b;
+        }
+
+        .q-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .helper-text {
+            font-size: 0.75em;
+            color: #6b7280;
+            margin-top: 5px;
+        }
+
+        /* XP / GAMIFICATION */
+        .xp-wrapper {
+            width: 100%;
+            margin-top: 6px;
+            font-size: 0.72em;
+            color: #e5e7eb;
+        }
+
+        .xp-label {
+            opacity: 0.9;
+            margin-bottom: 4px;
+            color: #1e293b;
+            font-weight: bold;
+        }
+
+        .xp-bar {
+            position: relative;
+            width: 100%;
+            height: 8px;
+            border-radius: 999px;
+            background: #cbd5e1;
+            overflow: hidden;
+        }
+
+        .xp-bar-fill {
+            position: absolute;
+            inset: 0;
+            width: 0%;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            transition: width 0.35s ease-out;
+        }
+
+        #achievement-toast {
+            position: fixed;
+            left: 50%;
+            bottom: 30px;
+            transform: translateX(-50%) translateY(100px);
+            background: rgba(15, 23, 42, 0.96);
+            color: #e5e7eb;
+            padding: 10px 18px;
+            border-radius: 999px;
+            font-size: 0.75em;
+            box-shadow: 0 18px 45px rgba(0, 0, 0, 0.85);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 999;
+            transition: transform 0.35s ease, opacity 0.35s ease;
+        }
+
+        #achievement-toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* ==== BAND 8 & ESTIMATOR ==== */
+        .band8-panel,
+        .estimator-panel {
+            margin-top: 8px;
+            padding: 12px 16px;
+            border-radius: 16px;
+            font-size: 0.75em;
+        }
+
+        .band8-panel {
+            background: #e0f2fe;
+            color: #0f172a;
+        }
+
+        .estimator-panel {
+            background: #fef3c7;
+            color: #78350f;
+        }
+
+        .band8-title {
+            font-weight: 800;
+            font-size: 0.85em;
+            margin-bottom: 6px;
+        }
+
+        .band8-item {
+            margin-bottom: 6px;
+        }
+
+        .band8-item span.label {
+            font-weight: 700;
+        }
+
+        .estimator-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            gap: 8px;
+        }
+
+        .estimator-select {
+            padding: 4px 8px;
+            border-radius: 999px;
+            border: 1px solid #fbbf24;
+            font-size: 0.8em;
+            background: #fff7ed;
+        }
+
+        #estimate-result {
+            margin-top: 6px;
+            font-weight: bold;
+        }
+
+        /* ==== LESSON VIEW ==== */
+        .translation-controls {
+            text-align: right;
+            margin-bottom: 10px;
+            width: 100%;
+            max-width: 960px;
+            margin: 0 auto 10px;
+        }
+
+        .translation-controls button {
+            background: var(--bg-light);
+            border: none;
+            color: white;
+            padding: 6px 10px;
+            margin-left: 5px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1em;
+        }
+
+        .lesson-content {
+            overflow: visible;
+            font-size: 20px;
+            line-height: 1.6;
+        }
+
+        .lesson-slide {
+            margin-bottom: 30px;
+        }
+
+        .lesson-slide h2 {
+            font-size: 32px;
+            margin-top: 0;
+            color: #1e293b;
+        }
+
+        .lesson-slide p,
+        .lesson-slide li {
+            font-size: 20px;
+            color: #334155;
+        }
+
+        .translation-ru,
+        .translation-uz {
+            display: none;
+            font-style: italic;
+            color: #4b5563;
+            font-size: 0.85em;
+            margin-top: 4px;
+            display: block;
+            /* Logic handled via JS inline styles */
+        }
+
+        /* ==== PRINT ==== */
+        #view-print .card {
+            max-width: 600px;
+        }
+
+        #print-output {
+            display: none;
+        }
+
+        @media print {
+            body {
+                background: white;
+                color: black;
+                height: auto;
+                display: block;
+                overflow: visible;
+            }
+
+            .sidebar,
+            .main-stage {
+                display: none;
+            }
+
+            #print-output {
+                display: block;
+                width: 100%;
+            }
+
+            .print-page {
+                page-break-after: always;
+                margin: 20px;
+                padding: 20px;
+            }
+
+            .print-q {
+                margin-bottom: 12px;
+                padding-bottom: 8px;
+                border-bottom: 1px dotted #ddd;
+                font-size: 14pt;
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            body {
+                flex-direction: column;
+                overflow: auto;
+            }
+
+            .sidebar {
+                width: 100%;
+                flex-direction: row;
+                flex-wrap: wrap;
+                height: auto;
+                border-right: none;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                overflow: visible;
+                padding: 10px;
+            }
+
+            .brand {
+                width: 100%;
+                margin-bottom: 10px;
+                font-size: 22px;
+            }
+
+            .menu-item {
+                flex: 1 1 45%;
+                justify-content: center;
+                font-size: 13px;
+                padding: 8px;
+            }
+
+            .menu-label {
+                width: 100%;
+                text-align: center;
+                margin: 10px 0 5px;
+            }
+
+            .main-stage {
+                height: auto;
+                min-height: calc(100vh - 200px);
+                overflow: visible;
+            }
+
+            .view {
+                position: relative;
+                padding: 20px;
+                inset: auto;
+                height: auto;
+                overflow: visible;
+                display: none;
+            }
+
+            .view.active {
+                display: flex;
+            }
+
+            .card,
+            .lesson-content,
+            .q-shell {
+                padding: 20px;
+                border-radius: 18px;
+            }
+
+            .q-main {
+                font-size: 22px;
+            }
+
+            .btn-primary {
+                width: 100%;
+            }
+
+            /* Hide fancy mode toggle on mobile to save space */
+            .mode-toggle {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="sidebar">
+        <div class="brand" onclick="nav('home')">
+            🎤 IELTS<br> SPEAKING LAB
+        </div>
+
+        <div class="mode-toggle">
+            <button class="mode-pill active" data-mode="extrovert" onclick="setMode('extrovert')">
+                🔥 Extrovert
+            </button>
+            <button class="mode-pill" data-mode="introvert" onclick="setMode('introvert')">
+                🌙 Introvert
+            </button>
+        </div>
+
+        <div class="menu-item active" id="nav-home" onclick="nav('home')">🏠 Home</div>
+
+        <div class="menu-label">Part 1 Topics</div>
+        <div class="menu-item" id="nav-random" onclick="startPractice('random')">🎲 Random Mix</div>
+        <div class="menu-item" id="nav-work_study-topic" onclick="startPractice('work_study')">💼 Work & Study</div>
+        <div class="menu-item" id="nav-hometown-topic" onclick="startPractice('hometown')">🏙️ Hometown</div>
+        <div class="menu-item" id="nav-daily_routine-topic" onclick="startPractice('daily_routine')">⏰ Daily Routine
+        </div>
+        <div class="menu-item" id="nav-hobbies_leisure-topic" onclick="startPractice('hobbies_leisure')">🎮 Hobbies &
+            Leisure</div>
+        <div class="menu-item" id="nav-food_health-topic" onclick="startPractice('food_health')">🍽️ Food & Health</div>
+        <div class="menu-item" id="nav-shopping_clothes-topic" onclick="startPractice('shopping_clothes')">🛍️ Shopping
+            & Clothes</div>
+        <div class="menu-item" id="nav-weather_seasons-topic" onclick="startPractice('weather_seasons')">🌦️ Weather &
+            Seasons</div>
+        <div class="menu-item" id="nav-friends_family-topic" onclick="startPractice('friends_family')">👨‍👩‍👧 Friends
+            & Family</div>
+        <div class="menu-item" id="nav-tech_transport-topic" onclick="startPractice('tech_transport')">📱 Transport
+        </div>
+
+        <div class="menu-label">Strategy Lessons</div>
+        <div class="menu-item" id="nav-lesson-overview" onclick="showLesson('overview')">📘 Part 1 Overview</div>
+        <div class="menu-item" id="nav-lesson-fluency" onclick="showLesson('fluency')">📘 Fluency & Length</div>
+        <div class="menu-item" id="nav-lesson-grammar" onclick="showLesson('grammar')">📘 Grammar & Range</div>
+        <div class="menu-item" id="nav-lesson-vocab" onclick="showLesson('vocab')">📘 Vocabulary & Ideas</div>
+        <div class="menu-item" id="nav-lesson-pron" onclick="showLesson('pron')">📘 Pronunciation</div>
+        <div class="menu-item" id="nav-lesson-band8" onclick="showLesson('band8')">📘 Band 8 Checklist</div>
+
+        <div style="margin-top: 20px;"></div>
+        <div class="menu-item" onclick="nav('print')">🖨️ PDF Generator</div>
+    </div>
+
+    <div class="main-stage">
+
+        <div id="view-home" class="view active">
+            <div class="card home-card-main">
+                <h1 id="home-title" style="margin: 0; color: var(--bg-main);">
+                    Crush IELTS Like a Legend 🔥
+                </h1>
+                <p id="home-subtitle" style="font-size: 18px; color: #64748b; margin: 20px 0 30px;">
+                    Rapid-fire Part 1 training. Hit “Random Mix” and go full tryhard.
+                </p>
+                <button class="btn-primary" onclick="startPractice('random')">START PRACTICE ▶</button>
+                <p style="margin-top:15px; font-size:14px; color:#94a3b8;">
+                    Tip: answer out loud in simple present, 3–4 sentences, then tap “Next”.
+                </p>
+                <p style="margin-top:10px; font-size:14px; color:#94a3b8;">
+                    <button class="pill-btn" onclick="shareApp()">🔗 Share App</button>
+                </p>
+            </div>
+        </div>
+
+        <div id="view-practice" class="view">
+            <div class="q-shell">
+                <div class="q-topic-label" id="topic-label">TOPIC: WORK & STUDY</div>
+
+                <div class="session-info">
+                    <span id="session-count">Questions: 0</span>
+                    <span id="target-band" title="Click to change target band" onclick="cycleTargetBand()">Target:
+                        8.0</span>
+                    <span id="session-xp">XP: 0 • Lv 1</span>
+                </div>
+
+                <div class="xp-wrapper">
+                    <div class="xp-label">Level Progress</div>
+                    <div class="xp-bar">
+                        <div class="xp-bar-fill" id="xp-bar-fill"></div>
+                    </div>
+                </div>
+
+                <div class="q-main" id="question-main">Loading question…</div>
+                <div class="q-extra" id="question-extra"></div>
+
+                <button class="pill-btn" id="fav-btn" onclick="toggleFavorite()" style="align-self:flex-start;">
+                    ☆ Mark as favourite
+                </button>
+
+                <div class="q-controls">
+                    <button class="btn-primary" onclick="changeQuestion(-1)" style="padding: 18px 20px;">◀</button>
+                    <button class="btn-primary" onclick="changeQuestion(1)" style="flex-grow: 1;">Next Question
+                        ▶</button>
+                    <button class="pill-btn" onclick="toggleHint()" id="hint-btn">💡 Show Hint</button>
+                    <button class="pill-btn" onclick="toggleSample()" id="sample-btn">📝 Sample Idea</button>
+                    <button class="pill-btn" onclick="toggleTimer()" id="timer-btn">⏱ 4s Beat</button>
+                    <button class="pill-btn" onclick="toggleBand8()" id="band8-btn">⭐ Check B8</button>
+                    <button class="pill-btn" onclick="toggleEstimator()" id="est-btn">📊 Estimate</button>
+                    <button class="pill-btn" onclick="toggleRecording()" id="rec-btn">🎙️ Record</button>
+                </div>
+
+                <div class="helper-text" id="hint-area" style="display:none;"></div>
+                <div class="helper-text" id="sample-area" style="display:none;"></div>
+                <div class="helper-text" id="timer-area">
+                    Speak for about 20–30 seconds per question.
+                </div>
+
+                <div class="helper-text" id="rec-status"></div>
+                <audio id="answer-audio" controls style="display:none; margin-top:10px; width:100%;"></audio>
+
+                <div class="band8-panel" id="band8-area" style="display:none;">
+                    <div class="band8-title">Band 8 Quick Checklist</div>
+                    <div class="band8-item">
+                        <span class="label">Fluency:</span> No long pauses to find words. Ideas linked.
+                    </div>
+                    <div class="band8-item">
+                        <span class="label">Vocab:</span> Precise words, some idioms.
+                    </div>
+                    <div class="band8-item">
+                        <span class="label">Grammar:</span> Error-free sentences, mix of structures.
+                    </div>
+                    <div class="band8-item">
+                        <span class="label">Pronunciation:</span> Clear, uses intonation.
+                    </div>
+                </div>
+
+                <div class="estimator-panel" id="estimator-area" style="display:none;">
+                    <div class="band8-title">Self-Estimate</div>
+                    <div class="estimator-row">
+                        <label for="est-fc">Fluency</label>
+                        <select id="est-fc" class="estimator-select">
+                            <option value="">-</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7">7</option>
+                            <option value="8">8</option>
+                            <option value="9">9</option>
+                        </select>
+                        <label for="est-lex">Vocab</label>
+                        <select id="est-lex" class="estimator-select">
+                            <option value="">-</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7">7</option>
+                            <option value="8">8</option>
+                            <option value="9">9</option>
+                        </select>
+                    </div>
+                    <div class="estimator-row">
+                        <label for="est-gram">Grammar</label>
+                        <select id="est-gram" class="estimator-select">
+                            <option value="">-</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7">7</option>
+                            <option value="8">8</option>
+                            <option value="9">9</option>
+                        </select>
+                        <label for="est-pron">Pronun</label>
+                        <select id="est-pron" class="estimator-select">
+                            <option value="">-</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7">7</option>
+                            <option value="8">8</option>
+                            <option value="9">9</option>
+                        </select>
+                    </div>
+                    <button class="pill-btn" onclick="calculateEstimate()" style="margin-top:5px;">Calculate</button>
+                    <div class="helper-text" id="estimate-result"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-lesson" class="view">
+            <div class="translation-controls">
+                <button onclick="toggleLang('ru')">🇷🇺 Русский</button>
+                <button onclick="toggleLang('uz')">🇺🇿 O'zbekcha</button>
+            </div>
+            <div class="lesson-content" id="lesson-content">
+            </div>
+        </div>
+
+        <div id="view-print" class="view">
+            <div class="card">
+                <h2>🖨️ Part 1 PDF Generator</h2>
+                <p style="color:#666;">Create printable worksheets.</p>
+
+                <div style="text-align:left; margin-top:20px;">
+                    <label style="font-weight:bold; display:block; margin-bottom:5px;">Topic set:</label>
+                    <select id="print-topic"
+                        style="width:100%; padding:10px; border-radius:8px; border:2px solid #ddd; margin-bottom:15px;">
+                        <option value="random">Mixed Topics</option>
+                        <option value="work_study">Work & Study</option>
+                        <option value="hometown">Hometown</option>
+                        <option value="daily_routine">Daily Routine</option>
+                        <option value="hobbies_leisure">Hobbies & Leisure</option>
+                        <option value="food_health">Food & Health</option>
+                        <option value="shopping_clothes">Shopping & Clothes</option>
+                        <option value="weather_seasons">Weather & Seasons</option>
+                        <option value="friends_family">Friends & Family</option>
+                        <option value="tech_transport">Tech & Transport</option>
+                        <option value="favourites">⭐ Favourites (if any)</option>
+                    </select>
+
+                    <label style="font-weight:bold; display:block; margin-bottom:5px;">Count:</label>
+                    <select id="print-count"
+                        style="width:100%; padding:10px; border-radius:8px; border:2px solid #ddd; margin-bottom:15px;">
+                        <option value="10">10 questions</option>
+                        <option value="15">15 questions</option>
+                        <option value="20" selected>20 questions</option>
+                    </select>
+
+                    <label style="font-weight:bold; display:block; margin-bottom:5px;">Teacher note:</label>
+                    <textarea id="teacher-comment"
+                        style="width:100%; min-height:60px; border-radius:8px; border:2px solid #ddd; padding:8px; resize:vertical;"></textarea>
+                </div>
+
+                <button class="btn-primary" style="width:100%;" onclick="doPrintSheet()">Generate & Print PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="print-output"></div>
+    <div id="achievement-toast"></div>
+
+    <script>
+        /* ============================================================
+           QUESTION DATA
+           ============================================================ */
+        const questions = {
+            work_study: [
+                { q: "Do you work or are you a student?", hint: "Say if you work or study and what you do exactly.", sample: "Actually, I work full-time. I am employed as a software engineer for a local tech firm. It is quite a demanding role, but I find it intellectually stimulating." },
+                { q: "What subjects do you study?", hint: "If you're a student, mention your major and main subjects.", sample: "I major in Economics. I mostly study macroeconomics and statistical analysis. I find the statistics part quite challenging, but it is essential for my degree." },
+                { q: "Why do you choose this major?", hint: "Give a clear reason why this field suits you.", sample: "I choose this field because I have a natural aptitude for numbers. I simply love how mathematics explains real-world behaviors." },
+                { q: "Do you like your job?", hint: "Say if you enjoy your work and why.", sample: "Yes, I am quite keen on my profession. I enjoy the problem-solving aspect of it. Every day presents a new challenge, so it never feels monotonous." },
+                { q: "What do you dislike about your studies?", hint: "Mention one difficult or annoying part.", sample: "I tend to dislike the heavy workload during exam season. The professors give us a lot of reading, and I often feel a bit overwhelmed." },
+                { q: "Do you get on well with your colleagues?", hint: "Describe your relationship with people you work with.", sample: "Absolutely, I get on very well with them. We have a great rapport. We often eat lunch together, and I think a good team dynamic is crucial." },
+                { q: "What responsibilities do you have at work?", hint: "Mention your main duties.", sample: "I am responsible for managing client accounts. I basically ensure that they are satisfied with our service and I handle any complaints they have." },
+                { q: "Do you prefer working alone or in a team?", hint: "Choose one and explain why.", sample: "I generally prefer working in a team. I believe that collaboration sparks creativity. When we brainstorm together, we usually come up with better solutions." },
+                { q: "Do you plan to continue in this field?", hint: "Talk about your long-term plans.", sample: "Yes, I certainly plan to stay in this industry. It offers great career progression, and I see myself leading a team eventually." },
+                { q: "Is your job popular in your country?", hint: "Say whether many people choose this work.", sample: "Yes, IT is extremely popular right now. Many young people want to enter this sector because the salaries are competitive." }
+            ],
+            hometown: [
+                { q: "Where do you come from?", hint: "Mention your city and country.", sample: "I hail from Tashkent, which is the capital city of Uzbekistan. It is a sprawling metropolis with a mix of modern architecture and traditional heritage." },
+                { q: "Do you live in a house or an apartment?", hint: "Say what type of home you live in.", sample: "I currently reside in a high-rise apartment complex. I prefer it because it offers great security and a fantastic view." },
+                { q: "Who do you live with?", hint: "Talk about family or flatmates.", sample: "I live with my immediate family—my parents and my younger brother. We are a close-knit unit, so I enjoy their company." },
+                { q: "Do you like your hometown?", hint: "Give your opinion.", sample: "Yes, I am very fond of my hometown. It has a unique charm and the people are incredibly hospitable. It feels like home in the truest sense." },
+                { q: "Is your hometown a good place for children?", hint: "Mention facilities/safety.", sample: "I think so. There are plenty of parks and green spaces where children play safely. Also, the school system is quite robust." },
+                { q: "What is there for tourists to do in your hometown?", hint: "Talk about sights/food.", sample: "Tourists usually visit the old bazaars and historical mosques. The architecture is stunning. Also, there are many restaurants to try our traditional cuisine." },
+                { q: "How often do you visit your hometown?", hint: "If you live away, say how often.", sample: "I try to visit every couple of months. My schedule is quite busy, but I make it a priority to see my parents regularly." },
+                { q: "Do you know your neighbors?", hint: "Talk about relationship with neighbors.", sample: "Yes, I know them quite well. We often greet each other. It is a friendly community, and we look out for one another." },
+                { q: "Is your neighborhood quiet or noisy?", hint: "Describe noise level.", sample: "It tends to be quite peaceful. It is located away from the main highway, so we don't hear much traffic noise." },
+                { q: "Do you plan to live there permanently?", hint: "Say if you want to stay or move.", sample: "I am not entirely sure. While I love it there, I also want to experience life in other countries. I suppose I keep my options open." }
+            ],
+            daily_routine: [
+                { q: "What time do you usually wake up?", hint: "Mention the time.", sample: "I typically wake up around 7:00 AM. I like to have an early start so I don't feel rushed." },
+                { q: "What is your morning routine?", hint: "Describe actions after waking up.", sample: "After I get up, I drink a glass of water and do some light stretching. Then I shower, get dressed, and have a quick breakfast." },
+                { q: "Do you have breakfast every day?", hint: "Say if you eat breakfast.", sample: "Yes, I never skip breakfast. I believe it is the most important meal. I usually have oatmeal or eggs." },
+                { q: "Do you usually do the same things at the same time?", hint: "Is your routine fixed?", sample: "Yes, I am a creature of habit. I like having a structured routine because it makes me more efficient." },
+                { q: "What do you do in your free time?", hint: "Mention 2-3 activities.", sample: "In my spare time, I usually read novels or watch documentaries. I also enjoy going for long walks to clear my head." },
+                { q: "Do you prefer mornings or evenings?", hint: "Choose one.", sample: "I prefer evenings. I feel more relaxed when the work day is over. It is the time when I finally unwind." },
+                { q: "How do you organize your schedule?", hint: "Tools or methods you use.", sample: "I use a digital calendar to track my tasks. I prioritize the most urgent assignments and allocate specific time blocks." },
+                { q: "Do you think your routine is healthy?", hint: "Evaluate your habits.", sample: "For the most part, yes. I make sure to get enough sleep. However, I probably sit at my desk for too long." },
+                { q: "Do you ever change your routine?", hint: "Weekends vs Weekdays.", sample: "Sometimes, on weekends, I change things up. I sleep in a bit later and have a leisurely brunch to break the monotony." }
+            ],
+            hobbies_leisure: [
+                { q: "Do you have any hobbies?", hint: "Mention one hobby.", sample: "Yes, I am quite passionate about photography. I love capturing candid moments and landscapes." },
+                { q: "How much time do you spend on your hobby?", hint: "Duration per week.", sample: "I dedicate my weekends to it. During the week, I am too busy, but on Saturdays, I spend a few hours shooting." },
+                { q: "Do you like reading books?", hint: "Reading habits.", sample: "I am an avid reader. I mostly read non-fiction because I enjoy learning new things." },
+                { q: "What kind of movies do you like?", hint: "Favorite genre.", sample: "I am a big fan of psychological thrillers. I enjoy movies that make me think and have unexpected plot twists." },
+                { q: "Do you play any musical instruments?", hint: "Instruments.", sample: "I play the guitar a little bit. I am not a virtuoso, but I can strum a few chords to relax." },
+                { q: "Do you prefer watching TV or browsing the internet?", hint: "Choose one.", sample: "I prefer browsing the internet. It is more interactive, and I choose exactly what I want to consume." },
+                { q: "Do you like listening to music?", hint: "Importance of music.", sample: "I absolutely love music. It is the soundtrack of my life. I listen to it while I commute and work." },
+                { q: "When do you listen to music?", hint: "Times/situations.", sample: "I mostly listen to it when I am on the move. I always have my headphones on when I take the bus." },
+                { q: "Do you prefer spending free time indoors or outdoors?", hint: "Indoors vs Outdoors.", sample: "It depends on the weather, but generally, I prefer outdoors. I like fresh air and nature." },
+                { q: "Do you collect anything?", hint: "Collections.", sample: "I collect vintage coins. I find the history behind them fascinating. Each coin tells a story." }
+            ],
+            food_health: [
+                { q: "What is your favorite food?", hint: "One dish/cuisine.", sample: "I absolutely adore Italian cuisine, specifically pasta. I love the variety of sauces and textures." },
+                { q: "Do you like cooking?", hint: "Enjoyment of cooking.", sample: "Yes, I find cooking very therapeutic. I enjoy chopping vegetables and experimenting with spices." },
+                { q: "How often do you eat out?", hint: "Frequency.", sample: "I usually eat out once or twice a week, usually on Friday nights. It is a nice treat after a long work week." },
+                { q: "Do you prefer home-cooked food or restaurant food?", hint: "Choose one.", sample: "I prefer home-cooked food. It is generally healthier because I control the ingredients." },
+                { q: "What is a traditional meal in your country?", hint: "Local dish.", sample: "Plov is our most famous dish. It consists of rice, carrots, meat, and spices. We serve it to guests." },
+                { q: "Do you eat a lot of fruit and vegetables?", hint: "Healthy eating.", sample: "I try to. I make a conscious effort to include greens in every meal as they are rich in vitamins." },
+                { q: "Do you like chocolate?", hint: "Sweets.", sample: "I have a sweet tooth, so yes. I prefer dark chocolate because it is not as sickly sweet as milk chocolate." },
+                { q: "Do you drink coffee or tea?", hint: "Preference.", sample: "I am definitely a coffee drinker. I need a strong cup to function in the morning." },
+                { q: "Do you exercise regularly?", hint: "Fitness routine.", sample: "Yes, I go to the gym three times a week. I focus on weight training to stay physically active." }
+            ],shopping_clothes: [
+{ q: "Do you enjoy shopping?", hint: "Like/Dislike.", sample: "Not particularly. I find crowded malls quite stressful. I
+usually only go when I strictly need something." },
+{ q: "How often do you buy new clothes?", hint: "Frequency.", sample: "I buy clothes seasonally. I tend to replace
+worn-out items rather than buying things on impulse." },
+{ q: "Do you prefer shopping online or in stores?", hint: "Method.", sample: "I prefer online shopping. It is much more
+convenient. I compare prices easily and get everything delivered." },
+{ q: "What kind of clothes do you usually wear?", hint: "Style.", sample: "I usually wear casual attire, like jeans and
+a t-shirt. Comfort is my main priority." },
+{ q: "Do you wear a watch?", hint: "Accessories.", sample: "Yes, I wear a smartwatch every day. I use it to track my
+steps and receive notifications." },
+{ q: "Do you like buying gifts for others?", hint: "Gifts.", sample: "Yes, I enjoy finding the perfect gift. It feels
+good to see someone's face light up." },
+{ q: "Do you prefer comfortable clothes or fashionable clothes?", hint: "Comfort vs Fashion.", sample: "Definitely
+comfortable clothes. I don't see the point in wearing something stylish if it restricts my movement." },
+{ q: "Do you spend a lot of money on clothes?", hint: "Budget.", sample: "No, I am quite frugal. I look for sales and
+discounts. I don't think it is necessary to spend a fortune." },
+{ q: "What is your favorite color to wear?", hint: "Color.", sample: "I tend to wear a lot of blue. It suits my
+complexion and matches with almost anything." }
+],
+weather_seasons: [
+{ q: "What is the weather like in your country?", hint: "Climate.", sample: "It is quite continental. We have very hot
+summers and chilly winters." },
+{ q: "What is your favorite season?", hint: "Fav season.", sample: "I love spring. The temperature is mild, and
+everything is in bloom. It feels like the world is waking up." },
+{ q: "Do you like rainy days?", hint: "Rain.", sample: "Actually, I do. I find the sound of rain very soothing. It is
+the perfect weather to stay indoors." },
+{ q: "What do you do when it rains?", hint: "Activity.", sample: "If I am at home, I usually watch movies or cook. If I
+am outside, I just open my umbrella!" },
+{ q: "Do you prefer hot or cold weather?", hint: "Preference.", sample: "I prefer cold weather. You can always put on
+more layers to get warm, but in the heat, you can't do much." },
+{ q: "Does the weather affect your mood?", hint: "Mood.", sample: "Yes, definitely. On sunny days, I feel energetic.
+Overcast days tend to make me feel a bit lethargic." },
+{ q: "Do you check the weather forecast daily?", hint: "Check frequency.", sample: "Yes, I check it every morning. It
+helps me decide what to wear and whether I need an umbrella." },
+{ q: "Is the climate in your country changing?", hint: "Climate change.", sample: "It seems so. The summers feel hotter
+every year, and the winters are becoming less predictable." },
+{ q: "Do you wear different clothes in different seasons?", hint: "Clothing.", sample: "Absolutely. In winter, I wear
+heavy coats. In summer, I switch to light fabrics like cotton." },
+{ q: "Do you like snow?", hint: "Snow.", sample: "I love snow when it first falls; it looks magical. However, I dislike
+it when it turns into slush." }
+],
+friends_family: [
+{ q: "Do you have a large family?", hint: "Size.", sample: "No, I come from a small family. It is just my parents and
+me. However, we have extended relatives." },
+{ q: "Who are you closest to in your family?", hint: "Person.", sample: "I am closest to my mother. She understands me
+better than anyone else." },
+{ q: "Do you spend much time with your family?", hint: "Time.", sample: "I try to. We have a tradition of having Sunday
+dinner together to catch up." },
+{ q: "Do you prefer spending time with family or friends?", hint: "Comparison.", sample: "It depends. With friends, I
+have fun. With family, I feel a sense of security. I value both." },
+{ q: "What do you usually do with your friends?", hint: "Activities.", sample: "We usually go to cafes or the cinema.
+Sometimes we just hang out and chat." },
+{ q: "Do you have a best friend?", hint: "Bestie.", sample: "Yes, his name is Aziz. We know each other since school and
+share the same humor." },
+{ q: "How often do you see your friends?", hint: "Frequency.", sample: "I see them about once a week. We are busy, but
+we make an effort to meet up." },
+{ q: "Do you like making new friends?", hint: "Social.", sample: "Yes, I am quite sociable. I enjoy meeting people from
+different backgrounds." },
+{ q: "Is family important to you?", hint: "Value.", sample: "Family is everything to me. They are my support system. I
+know they always have my back." }
+],
+tech_transport: [
+{ q: "Do you use the internet much?", hint: "Usage.", sample: "I use it constantly. I rely on it for work,
+communication, and entertainment." },
+{ q: "What websites do you visit often?", hint: "Sites.", sample: "I frequently visit YouTube for educational videos and
+news websites to stay updated." },
+{ q: "Do you have a car?", hint: "Ownership.", sample: "No, I don't own a car. Public transport covers my route
+perfectly, and cars are expensive." },
+{ q: "Do you prefer public transport or private cars?", hint: "Preference.", sample: "I prefer public transport for the
+daily commute. However, for road trips, a car is better." },
+{ q: "Do you use social media apps?", hint: "Apps.", sample: "Yes, I am active on Instagram and Telegram. I use them to
+stay in touch with friends." }
+]
+};
+
+const topicKeys = Object.keys(questions);
+
+/* ============================================================
+STRATEGY LESSONS
+============================================================ */
+const lessons = {
+overview: `
+<div class="lesson-slide">
+    <h2>What Happens in Part 1?</h2>
+    <p>
+        In Part 1, the examiner asks simple questions about your life: work, home, hobbies.
+        <span class="translation-ru">Вас спросят о работе, доме и хобби.</span>
+        <span class="translation-uz">Sizdan ish, uy va sevimli mashg'ulotlar haqida so'rashadi.</span>
+    </p>
+    <ul>
+        <li>Length: 4–5 minutes.</li>
+        <li>Topics: Personal, familiar.</li>
+        <li>Goal: Speak naturally.</li>
+    </ul>
+</div>
+<div class="lesson-slide">
+    <h2>Length of Answers</h2>
+    <p>
+        2–4 sentences per answer is perfect.
+        <span class="translation-ru">2–4 предложения на ответ идеально.</span>
+        <span class="translation-uz">Har bir javobga 2–4 ta gap yetarli.</span>
+    </p>
+    <ul>
+        <li>Direct answer.</li>
+        <li>Reason/Detail.</li>
+        <li>Example.</li>
+    </ul>
+</div>
+`,
+fluency: `
+<div class="lesson-slide">
+    <h2>Fluency vs Memorising</h2>
+    <p>Don't memorise scripts. Use patterns.</p>
+    <ul>
+        <li>Use linkers: <em>because, so, and, but</em>.</li>
+        <li>Don't stop for small grammar mistakes.</li>
+        <li>Keep going!</li>
+    </ul>
+</div>
+`,
+grammar: `
+<div class="lesson-slide">
+    <h2>Grammar Basics</h2>
+    <p>Keep it accurate.</p>
+    <ul>
+        <li>Present: "I usually work..."</li>
+        <li>Past: "I used to play..."</li>
+        <li>Future: "I plan to..."</li>
+    </ul>
+</div>
+`,
+vocab: `
+<div class="lesson-slide">
+    <h2>Vocabulary</h2>
+    <p>Avoid "good" and "bad".</p>
+    <ul>
+        <li>Instead of good: <em>enjoyable, relaxing, fantastic</em>.</li>
+        <li>Instead of bad: <em>terrible, exhausting, dull</em>.</li>
+    </ul>
+</div>
+`,
+pron: `
+<div class="lesson-slide">
+    <h2>Pronunciation</h2>
+    <ul>
+        <li>Clear is better than fast.</li>
+        <li>Stress key words: "I <strong>really</strong> like it."</li>
+        <li>Pause slightly between ideas.</li>
+    </ul>
+</div>
+`,
+band8: `
+<div class="lesson-slide">
+    <h2>Band 8 Goal</h2>
+    <ul>
+        <li>Smooth speech, very few hesitations.</li>
+        <li>Idiomatic vocabulary.</li>
+        <li>Flexible grammar structures.</li>
+    </ul>
+</div>
+`
+};
+
+/* ============================================================
+STATE MANAGEMENT
+============================================================ */
+let currentTopic = 'random';
+let currentList = [];
+let currentIndex = 0;
+let beatTimer = null;
+let sessionQuestions = 0;
+let targetBand = 8.0;
+let favouritesCache = null;
+
+// Recording
+let mediaRecorder = null;
+let mediaStream = null;
+let audioChunks = [];
+let recordedAnswers = {};
+let recordingKey = null; // Fix: Tracks which question is being recorded
+
+// XP
+let totalXP = parseInt(localStorage.getItem('ielts_xp') || '0');
+let level = parseInt(localStorage.getItem('ielts_lvl') || '1');
+const XP_PER_QUESTION = 5;
+
+// Mode
+let currentMode = 'extrovert';
+const modeThemes = {
+extrovert: {
+bgMain: '#120638', bgLight: '#312e81', primary: '#f97316', accent: '#22c55e',
+homeTitle: 'Crush IELTS Like a Legend 🔥',
+homeSubtitle: 'Rapid-fire Part 1 training with streaks and XP.'
+},
+introvert: {
+bgMain: '#020617', bgLight: '#0f172a', primary: '#38bdf8', accent: '#a855f7',
+homeTitle: 'Calm IELTS Speaking Dojo 🌙',
+homeSubtitle: 'Practice thoughtful Part 1 answers at your own pace.'
+}
+};
+
+const topicLabelMap = {
+random: "MIXED TOPICS", work_study: "WORK & STUDY", hometown: "HOMETOWN",
+daily_routine: "DAILY ROUTINE", hobbies_leisure: "HOBBIES & LEISURE",
+food_health: "FOOD & HEALTH", shopping_clothes: "SHOPPING & CLOTHES",
+weather_seasons: "WEATHER & SEASONS", friends_family: "FRIENDS & FAMILY",
+tech_transport: "TECH & TRANSPORT"
+};
+
+/* ============================================================
+NAVIGATION
+============================================================ */
+function setActiveMenu(id) {
+document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
+const el = document.getElementById(id);
+if (el) el.classList.add('active');
+}
+
+function nav(view) {
+// Cleanup active states when leaving practice
+if (view !== 'practice') {
+if (beatTimer) toggleTimer(); // Stops timer
+if (mediaRecorder && mediaRecorder.state !== 'inactive') stopRecording();
+}
+
+document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+if (view === 'home') {
+document.getElementById('view-home').classList.add('active');
+setActiveMenu('nav-home');
+} else if (view === 'practice') {
+document.getElementById('view-practice').classList.add('active');
+} else if (view === 'lesson') {
+document.getElementById('view-lesson').classList.add('active');
+} else if (view === 'print') {
+document.getElementById('view-print').classList.add('active');
+}
+}
+
+/* ============================================================
+PRACTICE LOGIC
+============================================================ */
+function buildListForTopic(topic) {
+if (topic === 'random') {
+let all = [];
+topicKeys.forEach(key => all = all.concat(questions[key]));
+return shuffle(all.slice());
+} else {
+return shuffle(questions[topic].slice());
+}
+}
+
+function startPractice(topic) {
+currentTopic = topic;
+currentList = buildListForTopic(topic);
+currentIndex = 0;
+sessionQuestions = 0;
+updateTopicLabel();
+renderCurrentQuestion();
+nav('practice');
+setActiveMenu(topic === 'random' ? 'nav-random' : `nav-${topic}-topic`);
+}
+
+function updateTopicLabel() {
+const label = document.getElementById('topic-label');
+if (!label) return;
+label.textContent = "TOPIC: " + (topicLabelMap[currentTopic] || "MIXED TOPICS");
+}
+
+function updateSessionInfo() {
+document.getElementById('session-count').textContent = "Questions: " + sessionQuestions;
+document.getElementById('target-band').textContent = "Target: " + targetBand.toFixed(1);
+document.getElementById('session-xp').textContent = `XP: ${totalXP} • Lv ${level}`;
+const bar = document.getElementById('xp-bar-fill');
+if(bar) bar.style.width = (totalXP % 100) + '%';
+}
+
+function getCurrentQuestion() {
+if (!currentList.length) currentList = buildListForTopic(currentTopic);
+if (currentIndex >= currentList.length) currentIndex = 0;
+return currentList[currentIndex];
+}
+
+function getCurrentKey(item) {
+// Unique key generator for favorites/recordings
+// FIX: Use Question text only to share status across topics
+if(!item) item = getCurrentQuestion();
+return item.q;
+}
+
+function renderCurrentQuestion() {
+// FIX: Stop recording if moving to next question
+if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+stopRecording();
+}
+
+const item = getCurrentQuestion();
+sessionQuestions++;
+gainXP(XP_PER_QUESTION);
+updateSessionInfo();
+checkAchievements();
+
+document.getElementById('question-main').textContent = item.q;
+document.getElementById('question-extra').textContent = "";
+
+// Reset helpers
+const hintArea = document.getElementById('hint-area');
+const sampleArea = document.getElementById('sample-area');
+hintArea.style.display = 'none';
+sampleArea.style.display = 'none';
+hintArea.textContent = item.hint;
+sampleArea.textContent = item.sample;
+document.getElementById('hint-btn').textContent = "💡 Show Hint";
+document.getElementById('sample-btn').textContent = "📝 Sample Idea";
+
+// Reset Panels
+document.getElementById('band8-area').style.display = 'none';
+document.getElementById('band8-btn').textContent = "⭐ Check B8";
+document.getElementById('estimator-area').style.display = 'none';
+document.getElementById('est-btn').textContent = "📊 Estimate";
+
+// Reset inputs
+document.querySelectorAll('.estimator-select').forEach(el => el.value = '');
+document.getElementById('estimate-result').textContent = '';
+
+// Reset Recording UI
+const recBtn = document.getElementById('rec-btn');
+if (recBtn) recBtn.textContent = '🎙️ Record';
+const statusEl = document.getElementById('rec-status');
+if (statusEl) {
+statusEl.style.color = '#6b7280';
+statusEl.textContent = '';
+}
+
+showRecordingForCurrentQuestion();
+updateFavouriteButton();
+}
+
+function changeQuestion(step) {
+const newIndex = currentIndex + step;
+
+// Bounds check
+if (newIndex < 0) { // Optional: Loop to end or just stop? Let's stop at 0. return; } if (newIndex>= currentList.length)
+    {
+    // If next is clicked at end, maybe loop or just stay?
+    // Original behavior was loop via getCurrentQuestion logic, let's keep it simple
+    currentIndex = 0;
+    } else {
+    currentIndex = newIndex;
+    }
+    renderCurrentQuestion();
+    }
+
+    function nextQuestion() {
+    currentIndex++;
+    renderCurrentQuestion();
+    }
+
+    /* Toggles */
+    function toggleHint() {
+    const area = document.getElementById('hint-area');
+    const btn = document.getElementById('hint-btn');
+    const isHidden = area.style.display === 'none';
+    area.style.display = isHidden ? 'block' : 'none';
+    btn.textContent = isHidden ? "💡 Hide Hint" : "💡 Show Hint";
+    }
+
+    function toggleSample() {
+    const area = document.getElementById('sample-area');
+    const btn = document.getElementById('sample-btn');
+    const isHidden = area.style.display === 'none';
+    area.style.display = isHidden ? 'block' : 'none';
+    btn.textContent = isHidden ? "📝 Hide Sample" : "📝 Sample Idea";
+    }
+
+    /* Timer */
+    function toggleTimer() {
+    const btn = document.getElementById('timer-btn');
+    const area = document.getElementById('timer-area');
+    if (beatTimer) {
+    clearInterval(beatTimer);
+    beatTimer = null;
+    btn.textContent = "⏱ 4s Beat";
+    area.textContent = "Timer stopped.";
+    } else {
+    let beat = 0;
+    beatTimer = setInterval(() => {
+    beat++;
+    area.textContent = "Beat: " + beat + " (pause briefly now)";
+    }, 4000);
+    btn.textContent = "⏹ Stop Beat";
+    }
+    }
+
+    /* Panels */
+    function toggleBand8() {
+    const area = document.getElementById('band8-area');
+    const btn = document.getElementById('band8-btn');
+    const isHidden = area.style.display === 'none';
+    area.style.display = isHidden ? 'block' : 'none';
+    btn.textContent = isHidden ? "⭐ Hide B8" : "⭐ Check B8";
+    }
+
+    function toggleEstimator() {
+    const area = document.getElementById('estimator-area');
+    const btn = document.getElementById('est-btn');
+    const isHidden = area.style.display === 'none';
+    area.style.display = isHidden ? 'block' : 'none';
+    btn.textContent = isHidden ? "📊 Hide Est" : "📊 Estimate";
+    }
+
+    function calculateEstimate() {
+    const ids = ['est-fc', 'est-lex', 'est-gram', 'est-pron'];
+    const scores = [];
+    for (const id of ids) {
+    const val = parseFloat(document.getElementById(id).value);
+    if (!val) return alert("Please rate all 4 areas.");
+    scores.push(val);
+    }
+    const avg = scores.reduce((a,b)=>a+b,0) / 4;
+    const rounded = Math.round(avg * 2) / 2;
+    const res = document.getElementById('estimate-result');
+
+    let msg = "Est: " + rounded.toFixed(1);
+    if (rounded >= targetBand) {
+    res.style.color = '#166534';
+    msg += " (On target! 🎉)";
+    } else {
+    res.style.color = '#b91c1c';
+    msg += " (Keep practicing)";
+    }
+    res.textContent = msg;
+    }
+
+    function cycleTargetBand() {
+    const values = [6.0, 7.0, 7.5, 8.0, 8.5, 9.0];
+    let idx = values.indexOf(targetBand);
+    idx = (idx + 1) % values.length;
+    targetBand = values[idx];
+    updateSessionInfo();
+    }
+
+    /* ============================================================
+    XP & STORAGE
+    ============================================================ */
+    function gainXP(amount) {
+    totalXP += amount;
+    level = 1 + Math.floor(totalXP / 100);
+    localStorage.setItem('ielts_xp', totalXP);
+    localStorage.setItem('ielts_lvl', level);
+    updateSessionInfo();
+    }
+
+    function showToast(message) {
+    const toast = document.getElementById('achievement-toast');
+    toast.textContent = message;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2200);
+    }
+
+    function checkAchievements() {
+    const q = sessionQuestions;
+    if (q === 3) showToast('🔥 Warm-up complete!');
+    if (q === 10) showToast('💥 10 Question Streak!');
+    }
+
+    /* ============================================================
+    FAVOURITES
+    ============================================================ */
+    const FAV_KEY = 'ielts_favs_v3';
+
+    function loadFavourites() {
+    if (favouritesCache) return favouritesCache;
+    try {
+    const raw = localStorage.getItem(FAV_KEY);
+    favouritesCache = raw ? JSON.parse(raw) : [];
+    } catch (e) { favouritesCache = []; }
+    return favouritesCache;
+    }
+
+    function saveFavourites() {
+    localStorage.setItem(FAV_KEY, JSON.stringify(favouritesCache));
+    }
+
+    function isCurrentFavourite() {
+    const key = getCurrentKey();
+    return loadFavourites().some(f => f.key === key);
+    }
+
+    function updateFavouriteButton() {
+    const btn = document.getElementById('fav-btn');
+    btn.textContent = isCurrentFavourite() ? '★ In favourites' : '☆ Mark as favourite';
+    }
+
+    function toggleFavorite() {
+    const favs = loadFavourites();
+    const key = getCurrentKey();
+    const item = getCurrentQuestion();
+    const idx = favs.findIndex(f => f.key === key);
+
+    if (idx >= 0) favs.splice(idx, 1);
+    else favs.push({ key, topic: currentTopic, q: item.q });
+
+    favouritesCache = favs;
+    saveFavourites();
+    updateFavouriteButton();
+    }
+
+    /* ============================================================
+    RECORDING
+    ============================================================ */
+    function showRecordingForCurrentQuestion() {
+    const key = getCurrentKey();
+    const audioEl = document.getElementById('answer-audio');
+    const statusEl = document.getElementById('rec-status');
+    const rec = recordedAnswers[key];
+
+    if (rec && rec.url) {
+    audioEl.src = rec.url;
+    audioEl.load(); // Fix: Explicit load for Chrome
+    audioEl.style.display = 'block';
+    statusEl.style.color = '#166534';
+    statusEl.textContent = 'Recording loaded.';
+    } else {
+    audioEl.pause();
+    audioEl.removeAttribute('src');
+    audioEl.load();
+    audioEl.style.display = 'none';
+    statusEl.textContent = '';
+    }
+    }
+
+    function toggleRecording() {
+    if (!mediaRecorder || mediaRecorder.state === 'inactive') startRecording();
+    else stopRecording();
+    }
+
+    function startRecording() {
+    const btn = document.getElementById('rec-btn');
+    const statusEl = document.getElementById('rec-status');
+
+    if (!navigator.mediaDevices) {
+    statusEl.style.color = 'red';
+    return statusEl.textContent = 'Mic not supported (Use localhost/HTTPS).';
+    }
+
+    navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+    mediaStream = stream;
+    audioChunks = [];
+    mediaRecorder = new MediaRecorder(stream);
+
+    // FIX: Capture key NOW, so if user clicks next, we save to the old key
+    recordingKey = getCurrentKey();
+
+    mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
+
+    mediaRecorder.onstop = () => {
+    const blob = new Blob(audioChunks, { type: 'audio/webm' });
+    const url = URL.createObjectURL(blob);
+
+    // Save using the CAPTURED key, not the current one
+    if (recordedAnswers[recordingKey] && recordedAnswers[recordingKey].url) {
+    URL.revokeObjectURL(recordedAnswers[recordingKey].url);
+    }
+    recordedAnswers[recordingKey] = { blob, url };
+
+    // If we are still on the same question, update UI
+    if (recordingKey === getCurrentKey()) {
+    const audioEl = document.getElementById('answer-audio');
+    audioEl.src = url;
+    audioEl.load();
+    audioEl.style.display = 'block';
+    statusEl.textContent = 'Saved.';
+    statusEl.style.color = '#166534';
+    btn.textContent = '🎙️ Record';
+    }
+
+    // Cleanup stream
+    mediaStream.getTracks().forEach(t => t.stop());
+    };
+
+    mediaRecorder.start();
+    btn.textContent = '⏹ Stop';
+    statusEl.textContent = 'Recording...';
+    statusEl.style.color = '#b91c1c';
+    }).catch(() => {
+    statusEl.textContent = 'Mic denied or error.';
+    statusEl.style.color = 'red';
+    });
+    }
+
+    function stopRecording() {
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+    mediaRecorder.stop();
+    document.getElementById('rec-status').textContent = 'Processing...';
+    }
+    }
+
+    /* ============================================================
+    LESSONS & PRINT
+    ============================================================ */
+    function showLesson(key) {
+    nav('lesson');
+    document.querySelectorAll('.translation-ru, .translation-uz').forEach(e => e.style.display='none'); // reset
+    translation
+    setActiveMenu(`nav-lesson-${key}`);
+    document.getElementById('lesson-content').innerHTML = lessons[key] || lessons['overview'];
+    }
+
+    function toggleLang(lang) {
+    const sel = lang === 'ru' ? '.translation-ru' : '.translation-uz';
+    document.querySelectorAll(sel).forEach(el => {
+    el.style.display = el.style.display === 'block' ? 'none' : 'block';
+    });
+    }
+
+    function doPrintSheet() {
+    const topic = document.getElementById('print-topic').value;
+    const count = parseInt(document.getElementById('print-count').value);
+    const comment = document.getElementById('teacher-comment').value;
+
+    let list = [];
+    if (topic === 'favourites') {
+    const favs = loadFavourites();
+    if (!favs.length) return alert('No favourites marked!');
+    list = favs.map(f => ({q: f.q}));
+    } else if (topic === 'random') {
+    list = buildListForTopic('random');
+    } else {
+    list = shuffle(questions[topic].slice());
+    }
+
+    const out = document.getElementById('print-output');
+    out.innerHTML = `
+    <div class="print-page">
+        <h2>IELTS Speaking Part 1</h2>
+        <p>Answer in 2-4 sentences.</p>
+        ${list.slice(0, count).map((item, i) => `
+        <div class="print-q">${i+1}. ${item.q}</div>
+        `).join('')}
+        ${comment ? `<h3>Teacher Note:</h3>
+        <p>${comment}</p>` : ''}
+    </div>
+    `;
+    window.print();
+    }
+
+    /* ============================================================
+    HELPERS & INIT
+    ============================================================ */
+    function shuffle(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+    }
+
+    function setMode(mode) {
+    if (!modeThemes[mode]) return;
+    currentMode = mode;
+    const t = modeThemes[mode];
+    const r = document.documentElement.style;
+    r.setProperty('--bg-main', t.bgMain);
+    r.setProperty('--bg-light', t.bgLight);
+    r.setProperty('--primary', t.primary);
+    r.setProperty('--accent', t.accent);
+    document.getElementById('home-title').textContent = t.homeTitle;
+    document.getElementById('home-subtitle').textContent = t.homeSubtitle;
+    document.querySelectorAll('.mode-pill').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+    }
+
+    function shareApp() {
+    const url = window.location.href;
+    navigator.clipboard.writeText(url).then(() => alert('Link copied!')).catch(()=>alert('Copy: '+url));
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+    updateSessionInfo();
+    setMode('extrovert');
+    // Removed automatic lesson load, defaults to Home via HTML active class
+    });
+    </script>
+
+    </body>
+
+    </html>

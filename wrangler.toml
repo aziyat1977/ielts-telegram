@@ -1,0 +1,14 @@
+name = "ielts-academy-backend"
+main = "worker.js"
+compatibility_date = "2024-01-01"
+
+# KV Namespace for data storage
+kv_namespaces = [
+  { binding = "IELTS_KV", id = "<YOUR_KV_NAMESPACE_ID>" }
+]
+
+# Environment variables (set these in Cloudflare dashboard)
+[vars]
+# BOT_TOKEN = "your_telegram_bot_token"
+# CLICK_SERVICE_ID = "your_click_service_id"  
+# CLICK_SECRET_KEY = "your_click_secret_key"
