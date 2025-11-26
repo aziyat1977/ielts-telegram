@@ -1,16 +1,18 @@
 // Cloudflare Worker - IELTS Academy Backend
 // Handles authentication, payments, and access control
 
-// Environment variables (set in Cloudflare dashboard):
+// Environment variables (set via wrangler secret):
 // BOT_TOKEN - Your Telegram bot token
 // CLICK_SERVICE_ID - Your CLICK merchant service ID
 // CLICK_SECRET_KEY - Your CLICK merchant secret key
 
-addEventListener('fetch', event => {
-    event.respondWith(handleRequest(event.request))
-})
+export default {
+    async fetch(request, env, ctx) {
+        return handleRequest(request, env)
+    }
+}
 
-async function handleRequest(request) {
+async function handleRequest(request, env) {
     const url = new URL(request.url)
     const path = url.pathname
 
@@ -29,7 +31,7 @@ async function handleRequest(request) {
         // CLICK Payment Webhook
         if (path === '/webhook/click' && request.method === 'POST') {
             const payment = await request.json()
-            const result = await processClickPayment(payment)
+            const result = await processClickPayment(payment, env)
             return new Response(JSON.stringify(result), {
                 headers: { 'Content-Type': 'application/json', ...corsHeaders }
             })
@@ -38,7 +40,7 @@ async function handleRequest(request) {
         // Check user premium status
         if (path === '/api/check-premium') {
             const initData = request.headers.get('X-Telegram-Init-Data')
-            const user = await validateTelegramAuth(initData)
+            const user = await validateTelegramAuth(initData, env)
 
             if (!user) {
                 return new Response(JSON.stringify({ error: 'Unauthorized' }), {
@@ -47,7 +49,7 @@ async function handleRequest(request) {
                 })
             }
 
-            const premium = await checkPremiumStatus(user.id)
+            const premium = await checkPremiumStatus(user.id, env)
             return new Response(JSON.stringify({ premium, user }), {
                 headers: { 'Content-Type': 'application/json', ...corsHeaders }
             })
@@ -56,7 +58,7 @@ async function handleRequest(request) {
         // Track question usage for free users
         if (path === '/api/track-usage' && request.method === 'POST') {
             const initData = request.headers.get('X-Telegram-Init-Data')
-            const user = await validateTelegramAuth(initData)
+            const user = await validateTelegramAuth(initData, env)
 
             if (!user) {
                 return new Response(JSON.stringify({ error: 'Unauthorized' }), {
@@ -65,7 +67,7 @@ async function handleRequest(request) {
                 })
             }
 
-            const usage = await trackUsage(user.id)
+            const usage = await trackUsage(user.id, env)
             return new Response(JSON.stringify(usage), {
                 headers: { 'Content-Type': 'application/json', ...corsHeaders }
             })
@@ -74,7 +76,7 @@ async function handleRequest(request) {
         // Get user statistics
         if (path === '/api/stats') {
             const initData = request.headers.get('X-Telegram-Init-Data')
-            const user = await validateTelegramAuth(initData)
+            const user = await validateTelegramAuth(initData, env)
 
             if (!user) {
                 return new Response(JSON.stringify({ error: 'Unauthorized' }), {
@@ -83,7 +85,7 @@ async function handleRequest(request) {
                 })
             }
 
-            const stats = await getUserStats(user.id)
+            const stats = await getUserStats(user.id, env)
             return new Response(JSON.stringify(stats), {
                 headers: { 'Content-Type': 'application/json', ...corsHeaders }
             })
@@ -104,7 +106,7 @@ async function handleRequest(request) {
 }
 
 // Validate Telegram WebApp authentication
-async function validateTelegramAuth(initData) {
+async function validateTelegramAuth(initData, env) {
     if (!initData) return null
 
     try {
@@ -118,7 +120,7 @@ async function validateTelegramAuth(initData) {
             dataCheckArr.push(`${key}=${value}`)
         }
         dataCheckArr.sort()
-        const dataCheckString = dataCheckArr.join('\n')
+        const dataCheckString = dataCheckArr.join('\\n')
 
         // Calculate HMAC
         const secretKey = await crypto.subtle.importKey(
@@ -132,7 +134,7 @@ async function validateTelegramAuth(initData) {
         const hmacKey = await crypto.subtle.sign(
             'HMAC',
             secretKey,
-            new TextEncoder().encode(BOT_TOKEN)
+            new TextEncoder().encode(env.BOT_TOKEN)
         )
 
         const key = await crypto.subtle.importKey(
@@ -171,10 +173,10 @@ async function validateTelegramAuth(initData) {
 }
 
 // Process CLICK payment webhook
-async function processClickPayment(payment) {
+async function processClickPayment(payment, env) {
     // Verify CLICK signature
     const signature = payment.sign
-    const signString = `${payment.click_trans_id}${CLICK_SERVICE_ID}${CLICK_SECRET_KEY}${payment.merchant_trans_id}${payment.amount}${payment.action}${payment.sign_time}`
+    const signString = `${payment.click_trans_id}${env.CLICK_SERVICE_ID}${env.CLICK_SECRET_KEY}${payment.merchant_trans_id}${payment.amount}${payment.action}${payment.sign_time}`
 
     const expectedSignature = await hashMD5(signString)
 
@@ -185,21 +187,21 @@ async function processClickPayment(payment) {
     // Handle payment actions
     if (payment.action === 0) {
         // Prepare payment
-        return await preparePayment(payment)
+        return await preparePayment(payment, env)
     } else if (payment.action === 1) {
         // Complete payment
-        return await completePayment(payment)
+        return await completePayment(payment, env)
     }
 
     return { error: -3, error_note: 'Invalid action' }
 }
 
-async function preparePayment(payment) {
+async function preparePayment(payment, env) {
     const userId = payment.merchant_trans_id.split('_')[1]
     const amount = parseFloat(payment.amount)
 
     // Check if payment already exists
-    const existingPayment = await IELTS_KV.get(`payment:${payment.click_trans_id}`)
+    const existingPayment = await env.IELTS_KV.get(`payment:${payment.click_trans_id}`)
     if (existingPayment) {
         return {
             click_trans_id: payment.click_trans_id,
@@ -221,7 +223,7 @@ async function preparePayment(payment) {
     }
 
     // Store payment info
-    await IELTS_KV.put(`payment:${payment.click_trans_id}`, JSON.stringify({
+    await env.IELTS_KV.put(`payment:${payment.click_trans_id}`, JSON.stringify({
         userId,
         amount,
         status: 'prepared',
@@ -237,8 +239,8 @@ async function preparePayment(payment) {
     }
 }
 
-async function completePayment(payment) {
-    const paymentData = await IELTS_KV.get(`payment:${payment.click_trans_id}`, 'json')
+async function completePayment(payment, env) {
+    const paymentData = await env.IELTS_KV.get(`payment:${payment.click_trans_id}`, 'json')
 
     if (!paymentData) {
         return {
@@ -262,14 +264,14 @@ async function completePayment(payment) {
         amount: paymentData.amount
     }
 
-    await IELTS_KV.put(`user:${userId}:premium`, JSON.stringify(premiumData))
+    await env.IELTS_KV.put(`user:${userId}:premium`, JSON.stringify(premiumData))
 
     // Update payment status
     paymentData.status = 'completed'
-    await IELTS_KV.put(`payment:${payment.click_trans_id}`, JSON.stringify(paymentData))
+    await env.IELTS_KV.put(`payment:${payment.click_trans_id}`, JSON.stringify(paymentData))
 
     // Send notification to user via Telegram bot
-    await notifyUser(userId, isLifetime ? 'lifetime' : 'monthly')
+    await notifyUser(userId, isLifetime ? 'lifetime' : 'monthly', env)
 
     return {
         click_trans_id: payment.click_trans_id,
@@ -281,26 +283,26 @@ async function completePayment(payment) {
 }
 
 // Check premium status
-async function checkPremiumStatus(userId) {
-    const premiumData = await IELTS_KV.get(`user:${userId}:premium`, 'json')
+async function checkPremiumStatus(userId, env) {
+    const premiumData = await env.IELTS_KV.get(`user:${userId}:premium`, 'json')
 
     if (!premiumData || !premiumData.active) {
         return {
             active: false,
             type: 'free',
-            dailyQuestions: await getDailyUsage(userId)
+            dailyQuestions: await getDailyUsage(userId, env)
         }
     }
 
     // Check if subscription expired
     if (premiumData.type === 'monthly' && premiumData.expiresAt < Date.now()) {
         premiumData.active = false
-        await IELTS_KV.put(`user:${userId}:premium`, JSON.stringify(premiumData))
+        await env.IELTS_KV.put(`user:${userId}:premium`, JSON.stringify(premiumData))
         return {
             active: false,
             type: 'free',
             expired: true,
-            dailyQuestions: await getDailyUsage(userId)
+            dailyQuestions: await getDailyUsage(userId, env)
         }
     }
 
@@ -313,14 +315,14 @@ async function checkPremiumStatus(userId) {
 }
 
 // Track daily usage for free users
-async function trackUsage(userId) {
+async function trackUsage(userId, env) {
     const today = new Date().toISOString().split('T')[0]
     const key = `usage:${userId}:${today}`
 
-    const count = await IELTS_KV.get(key)
+    const count = await env.IELTS_KV.get(key)
     const newCount = (parseInt(count) || 0) + 1
 
-    await IELTS_KV.put(key, newCount.toString(), {
+    await env.IELTS_KV.put(key, newCount.toString(), {
         expirationTtl: 86400 // 24 hours
     })
 
@@ -332,9 +334,9 @@ async function trackUsage(userId) {
     }
 }
 
-async function getDailyUsage(userId) {
+async function getDailyUsage(userId, env) {
     const today = new Date().toISOString().split('T')[0]
-    const count = await IELTS_KV.get(`usage:${userId}:${today}`)
+    const count = await env.IELTS_KV.get(`usage:${userId}:${today}`)
     return {
         today: parseInt(count) || 0,
         limit: 5,
@@ -343,10 +345,10 @@ async function getDailyUsage(userId) {
 }
 
 // Get user statistics
-async function getUserStats(userId) {
+async function getUserStats(userId, env) {
     // Get all user data
-    const premium = await checkPremiumStatus(userId)
-    const usage = await getDailyUsage(userId)
+    const premium = await checkPremiumStatus(userId, env)
+    const usage = await getDailyUsage(userId, env)
 
     return {
         premium,
@@ -357,12 +359,12 @@ async function getUserStats(userId) {
 }
 
 // Send notification to user via Telegram
-async function notifyUser(userId, subscriptionType) {
+async function notifyUser(userId, subscriptionType, env) {
     const message = subscriptionType === 'lifetime'
-        ? '🎉 Congratulations! You now have LIFETIME premium access to IELTS Academy!\n\nEnjoy unlimited practice forever! 🚀'
-        : '🎉 Thank you for subscribing to IELTS Academy Premium!\n\nYou now have unlimited access for 30 days! 📚'
+        ? '🎉 Congratulations! You now have LIFETIME premium access to IELTS Academy!\\n\\nEnjoy unlimited practice forever! 🚀'
+        : '🎉 Thank you for subscribing to IELTS Academy Premium!\\n\\nYou now have unlimited access for 30 days! 📚'
 
-    const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+    const response = await fetch(`https://api.telegram.org/bot${env.BOT_TOKEN}/sendMessage`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -375,10 +377,152 @@ async function notifyUser(userId, subscriptionType) {
     return response.json()
 }
 
-// MD5 hash for CLICK signature
+// MD5 hash for CLICK signature - using SHA-256 instead as Web Crypto doesn't support MD5
+// NOTE: Verify with CLICK if SHA-256 is acceptable, or implement custom MD5
 async function hashMD5(str) {
-    const msgBuffer = new TextEncoder().encode(str)
-    const hashBuffer = await crypto.subtle.digest('MD5', msgBuffer)
-    const hashArray = Array.from(new Uint8Array(hashBuffer))
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+    // Simple MD5 implementation for Cloudflare Workers
+    // Since Web Crypto API doesn't support MD5, we'll use a pure JS implementation
+
+    function md5cycle(x, k) {
+        let a = x[0], b = x[1], c = x[2], d = x[3];
+        a = ff(a, b, c, d, k[0], 7, -680876936);
+        d = ff(d, a, b, c, k[1], 12, -389564586);
+        c = ff(c, d, a, b, k[2], 17, 606105819);
+        b = ff(b, c, d, a, k[3], 22, -1044525330);
+        a = ff(a, b, c, d, k[4], 7, -176418897);
+        d = ff(d, a, b, c, k[5], 12, 1200080426);
+        c = ff(c, d, a, b, k[6], 17, -1473231341);
+        b = ff(b, c, d, a, k[7], 22, -45705983);
+        a = ff(a, b, c, d, k[8], 7, 1770035416);
+        d = ff(d, a, b, c, k[9], 12, -1958414417);
+        c = ff(c, d, a, b, k[10], 17, -42063);
+        b = ff(b, c, d, a, k[11], 22, -1990404162);
+        a = ff(a, b, c, d, k[12], 7, 1804603682);
+        d = ff(d, a, b, c, k[13], 12, -40341101);
+        c = ff(c, d, a, b, k[14], 17, -1502002290);
+        b = ff(b, c, d, a, k[15], 22, 1236535329);
+        a = gg(a, b, c, d, k[1], 5, -165796510);
+        d = gg(d, a, b, c, k[6], 9, -1069501632);
+        c = gg(c, d, a, b, k[11], 14, 643717713);
+        b = gg(b, c, d, a, k[0], 20, -373897302);
+        a = gg(a, b, c, d, k[5], 5, -701558691);
+        d = gg(d, a, b, c, k[10], 9, 38016083);
+        c = gg(c, d, a, b, k[15], 14, -660478335);
+        b = gg(b, c, d, a, k[4], 20, -405537848);
+        a = gg(a, b, c, d, k[9], 5, 568446438);
+        d = gg(d, a, b, c, k[14], 9, -1019803690);
+        c = gg(c, d, a, b, k[3], 14, -187363961);
+        b = gg(b, c, d, a, k[8], 20, 1163531501);
+        a = gg(a, b, c, d, k[13], 5, -1444681467);
+        d = gg(d, a, b, c, k[2], 9, -51403784);
+        c = gg(c, d, a, b, k[7], 14, 1735328473);
+        b = gg(b, c, d, a, k[12], 20, -1926607734);
+        a = hh(a, b, c, d, k[5], 4, -378558);
+        d = hh(d, a, b, c, k[8], 11, -2022574463);
+        c = hh(c, d, a, b, k[11], 16, 1839030562);
+        b = hh(b, c, d, a, k[14], 23, -35309556);
+        a = hh(a, b, c, d, k[1], 4, -1530992060);
+        d = hh(d, a, b, c, k[4], 11, 1272893353);
+        c = hh(c, d, a, b, k[7], 16, -155497632);
+        b = hh(b, c, d, a, k[10], 23, -1094730640);
+        a = hh(a, b, c, d, k[13], 4, 681279174);
+        d = hh(d, a, b, c, k[0], 11, -358537222);
+        c = hh(c, d, a, b, k[3], 16, -722521979);
+        b = hh(b, c, d, a, k[6], 23, 76029189);
+        a = hh(a, b, c, d, k[9], 4, -640364487);
+        d = hh(d, a, b, c, k[12], 11, -421815835);
+        c = hh(c, d, a, b, k[15], 16, 530742520);
+        b = hh(b, c, d, a, k[2], 23, -995338651);
+        a = ii(a, b, c, d, k[0], 6, -198630844);
+        d = ii(d, a, b, c, k[7], 10, 1126891415);
+        c = ii(c, d, a, b, k[14], 15, -1416354905);
+        b = ii(b, c, d, a, k[5], 21, -57434055);
+        a = ii(a, b, c, d, k[12], 6, 1700485571);
+        d = ii(d, a, b, c, k[3], 10, -1894986606);
+        c = ii(c, d, a, b, k[10], 15, -1051523);
+        b = ii(b, c, d, a, k[1], 21, -2054922799);
+        a = ii(a, b, c, d, k[8], 6, 1873313359);
+        d = ii(d, a, b, c, k[15], 10, -30611744);
+        c = ii(c, d, a, b, k[6], 15, -1560198380);
+        b = ii(b, c, d, a, k[13], 21, 1309151649);
+        a = ii(a, b, c, d, k[4], 6, -145523070);
+        d = ii(d, a, b, c, k[11], 10, -1120210379);
+        c = ii(c, d, a, b, k[2], 15, 718787259);
+        b = ii(b, c, d, a, k[9], 21, -343485551);
+        x[0] = add32(a, x[0]);
+        x[1] = add32(b, x[1]);
+        x[2] = add32(c, x[2]);
+        x[3] = add32(d, x[3]);
+    }
+
+    function cmn(q, a, b, x, s, t) {
+        a = add32(add32(a, q), add32(x, t));
+        return add32((a << s) | (a >>> (32 - s)), b);
+    }
+
+    function ff(a, b, c, d, x, s, t) {
+        return cmn((b & c) | ((~b) & d), a, b, x, s, t);
+    }
+
+    function gg(a, b, c, d, x, s, t) {
+        return cmn((b & d) | (c & (~d)), a, b, x, s, t);
+    }
+
+    function hh(a, b, c, d, x, s, t) {
+        return cmn(b ^ c ^ d, a, b, x, s, t);
+    }
+
+    function ii(a, b, c, d, x, s, t) {
+        return cmn(c ^ (b | (~d)), a, b, x, s, t);
+    }
+
+    function md51(s) {
+        const n = s.length;
+        const state = [1732584193, -271733879, -1732584194, 271733878];
+        let i;
+        for (i = 64; i <= s.length; i += 64) {
+            md5cycle(state, md5blk(s.substring(i - 64, i)));
+        }
+        s = s.substring(i - 64);
+        const tail = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+        for (i = 0; i < s.length; i++)
+            tail[i >> 2] |= s.charCodeAt(i) << ((i % 4) << 3);
+        tail[i >> 2] |= 0x80 << ((i % 4) << 3);
+        if (i > 55) {
+            md5cycle(state, tail);
+            for (i = 0; i < 16; i++) tail[i] = 0;
+        }
+        tail[14] = n * 8;
+        md5cycle(state, tail);
+        return state;
+    }
+
+    function md5blk(s) {
+        const md5blks = [];
+        for (let i = 0; i < 64; i += 4) {
+            md5blks[i >> 2] = s.charCodeAt(i) + (s.charCodeAt(i + 1) << 8) + (s.charCodeAt(i + 2) << 16) + (s.charCodeAt(i + 3) << 24);
+        }
+        return md5blks;
+    }
+
+    function add32(a, b) {
+        return (a + b) & 0xFFFFFFFF;
+    }
+
+    function rhex(n) {
+        let s = '', j = 0;
+        for (; j < 4; j++)
+            s += hex_chr[(n >> (j * 8 + 4)) & 0x0F] + hex_chr[(n >> (j * 8)) & 0x0F];
+        return s;
+    }
+
+    const hex_chr = '0123456789abcdef'.split('');
+
+    function hex(x) {
+        for (let i = 0; i < x.length; i++)
+            x[i] = rhex(x[i]);
+        return x.join('');
+    }
+
+    return hex(md51(str));
 }

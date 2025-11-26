@@ -4,11 +4,11 @@ compatibility_date = "2024-01-01"
 
 # KV Namespace for data storage
 kv_namespaces = [
-  { binding = "IELTS_KV", id = "<YOUR_KV_NAMESPACE_ID>" }
+  { binding = "IELTS_KV", id = "PLACEHOLDER_WILL_BE_SET_BY_DEPLOY_SCRIPT" }
 ]
 
-# Environment variables (set these in Cloudflare dashboard)
-[vars]
-# BOT_TOKEN = "your_telegram_bot_token"
-# CLICK_SERVICE_ID = "your_click_service_id"  
-# CLICK_SECRET_KEY = "your_click_secret_key"
+# Environment variables (set these in Cloudflare dashboard or via wrangler secret)
+# The deploy-cloudflare.bat script will set these as secrets:
+# - BOT_TOKEN
+# - CLICK_SERVICE_ID  
+# - CLICK_SECRET_KEY

@@ -572,9 +572,30 @@
                             <h4>Category Progress</h4>
                             <div id=category-progress style="margin-top:1rem"></div>
                         </div>
-                        initializeApp();
-                        }
-                        </script>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Load data first (contains topicMeta and questions) -->
+    <script src="data.js"></script>
+
+    <!-- Load Telegram auth integration (optional) -->
+    <script src="telegram-auth.js"></script>
+
+    <!-- Load main app logic -->
+    <script src="app.js"></script>
+
+    <!-- Initialize the app after all scripts are loaded -->
+    <script>
+        console.log('[Init] Starting app initialization from inline script');
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeApp);
+        } else {
+            initializeApp();
+        }
+    </script>
 </body>
 
 </html>

@@ -1,8 +1,29 @@
+# Dependencies
 node_modules/
 .wrangler/
+package-lock.json
+
+# Logs
 *.log
+npm-debug.log*
+
+# OS files
 .DS_Store
-kv-output.txt
+Thumbs.db
+
+# Environment files
 .env
 .env.local
-package-lock.json
+.env.*.local
+
+# Temporary files
+kv-output.txt
+*.tmp
+*.bak
+*.backup
+
+# Sensitive backup files (keep code clean)
+*.working_backup
+*.before-*
+*.broken*
+*.corrupted

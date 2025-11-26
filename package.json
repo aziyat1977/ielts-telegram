@@ -11,6 +11,7 @@
     "node-telegram-bot-api": "^0.61.0"
   },
   "devDependencies": {
-    "nodemon": "^3.0.1"
+    "nodemon": "^3.0.1",
+    "wrangler": "^4.50.0"
   }
 }
