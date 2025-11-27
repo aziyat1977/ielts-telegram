@@ -1,0 +1,40 @@
+name: Deploy Cloudflare Worker
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    name: Deploy Worker
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      
+      - name: Install Wrangler
+        run: npm install -g wrangler
+      
+      - name: Create KV Namespace (if not exists)
+        run: |
+          wrangler kv namespace create "IELTS_KV" || echo "KV namespace might already exist"
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      
+      - name: Deploy Worker
+        run: wrangler deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      
+      - name: Set Secrets
+        run: |
+          echo "${{ secrets.BOT_TOKEN }}" | wrangler secret put BOT_TOKEN
+          echo "${{ secrets.CLICK_SERVICE_ID }}" | wrangler secret put CLICK_SERVICE_ID
+          echo "${{ secrets.CLICK_SECRET_KEY }}" | wrangler secret put CLICK_SECRET_KEY
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
