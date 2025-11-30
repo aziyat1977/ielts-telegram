@@ -480,162 +480,105 @@
                                 <button id="btn-record" onclick="app.toggleRecord()"
                                     style="background:var(--accent);border:none;color:#fff;padding:1rem 3rem;border-radius:99px;font-weight:700;font-size:1.1rem;cursor:pointer;box-shadow:0 0 20px var(--accent);">🎙️
                                     Record</button>
-                                <button onclick="app.nextQuestion()"
-                                    style="background:var(--primary);color:#000;border:none;padding:1rem 2rem;border-radius:99px;cursor:pointer;font-weight:700;">Next
-                                    ▶</button>
+                                <button onclick="app.nextQuestion()" <div
+                                    style="text-align:center;max-width:800px;margin:0 auto;">
+                                    <div style="margin-bottom:1.5rem;">
+                                        <span
+                                            style="color:var(--accent);font-weight:700;letter-spacing:.1em;text-transform:uppercase;">PART
+                                            3: DISCUSSION</span>
+                                        <div id="part3-topic-title"
+                                            style="font-size:1.5rem;font-weight:900;margin-top:0.5rem;">
+                                            Topic Title</div>
+                                    </div>
+
+                                    <div class="glass-panel" style="padding:2rem;margin-bottom:2rem;text-align:left;">
+                                        <h3 style="margin-bottom:1.5rem;color:var(--primary);">Discussion Questions</h3>
+                                        <ul id="part3-questions-list"
+                                            style="list-style:none;padding:0;margin-bottom:2rem;">
+                                        </ul>
+
+                                        <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1rem;">
+                                            <button onclick="app.togglePart3Content('templates')"
+                                                class="part3-toggle-btn"
+                                                style="background:var(--glass);border:1px solid var(--glass-border);color:var(--text);padding:0.5rem 1rem;border-radius:8px;cursor:pointer;">📝
+                                                Templates</button>
+                                            <button onclick="app.togglePart3Content('vocabulary')"
+                                                class="part3-toggle-btn"
+                                                style="background:var(--glass);border:1px solid var(--glass-border);color:var(--text);padding:0.5rem 1rem;border-radius:8px;cursor:pointer;">📚
+                                                Vocabulary</button>
+                                            <button onclick="app.togglePart3Content('sample')" class="part3-toggle-btn"
+                                                style="background:var(--glass);border:1px solid var(--glass-border);color:var(--text);padding:0.5rem 1rem;border-radius:8px;cursor:pointer;">💡
+                                                Sample Answer</button>
+                                        </div>
+
+                                        <div id="part3-templates" class="part3-hidden-content"
+                                            style="display:none;background:rgba(255,255,255,0.03);padding:1rem;border-radius:12px;margin-bottom:1rem;">
+                                            <h4 style="color:var(--text-dim);margin-bottom:0.5rem;">Useful Phrases</h4>
+                                            <ul id="part3-templates-list"
+                                                style="padding-left:1.5rem;color:var(--text-dim);"></ul>
+                                        </div>
+
+                                        <div id="part3-vocabulary" class="part3-hidden-content"
+                                            style="display:none;background:rgba(255,255,255,0.03);padding:1rem;border-radius:12px;margin-bottom:1rem;">
+                                            <h4 style="color:var(--text-dim);margin-bottom:0.5rem;">Key Vocabulary</h4>
+                                            <ul id="part3-vocab-list"
+                                                style="padding-left:1.5rem;color:var(--text-dim);">
+                                            </ul>
+                                        </div>
+
+                                        <div id="part3-sample" class="part3-hidden-content"
+                                            style="display:none;background:rgba(255,255,255,0.03);padding:1rem;border-radius:12px;margin-bottom:1rem;">
+                                            <h4 style="color:var(--text-dim);margin-bottom:0.5rem;">Sample Answer</h4>
+                                            <p id="part3-sample-text" style="color:var(--text-dim);line-height:1.6;">
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div id="part3-timer-area" style="margin-bottom:2rem;">
+                                        <div id="part3-timer-display"
+                                            style="font-size:2.5rem;font-weight:900;margin-bottom:1rem;">
+                                            0:00</div>
+                                    </div>
+
+                                    <button onclick="app.finishPractice()"
+                                        style="background:var(--success);color:#000;border:none;padding:1rem 3rem;border-radius:99px;cursor:pointer;font-weight:700;font-size:1.2rem;box-shadow:0 0 20px var(--success);">Finish
+                                        Practice 🏁</button>
                             </div>
                         </div>
 
-                        <!-- Part 2 Content -->
-                        <div id="part2-practice-content" style="display:none;">
-                            <button onclick="app.showView('dashboard')" class="interactive"
-                                style="position:absolute;top:1rem;left:1rem;background:0 0;border:1px solid var(--glass-border);color:var(--text-dim);padding:.5rem 1rem;border-radius:12px;cursor:pointer;">←
-                                Exit</button>
-
-                            <div id="part2-bullets" style="margin-bottom:1.5rem;padding-left:1.5rem;line-height:1.6;">
-                            </div>
-
-                            <div style="display:flex;gap:.5rem;margin-bottom:1rem;">
-                                <button class="lang-btn" onclick="app.toggleTranslation('ru', this)">🇷🇺
-                                    RU</button>
-                                <button class="lang-btn" onclick="app.toggleTranslation('uz', this)">🇺🇿
-                                    UZ</button>
-                            </div>
-
-                            <div id="part2-translation-ru" class="translation"></div>
-                            <div id="part2-translation-uz" class="translation"></div>
-                        </div>
-
-                        <div id="part2-timer-area" style="margin-bottom:2rem;">
-                            <div id="part2-timer-display"
-                                style="font-size:2.5rem;font-weight:900;margin-bottom:1rem;transition:color 0.3s;"
-                                onclick="app.togglePart2Timer()" class="interactive">0:00</div>
-                            <button onclick="app.togglePart2Timer()"
-                                style="background:var(--glass);border:1px solid var(--glass-border);color:var(--text);padding:0.5rem 1rem;border-radius:8px;cursor:pointer;">Skip
-                                Phase</button>
-                        </div>
-
-                        <details
-                            style="text-align:left;margin-bottom:2rem;background:rgba(255,255,255,0.03);padding:1rem;border-radius:12px;">
-                            <summary style="cursor:pointer;font-weight:600;color:var(--primary);">📋 IELTS
-                                Assessment Criteria</summary>
-                            <ul
-                                style="margin-top:1rem;padding-left:1.5rem;font-size:0.9rem;color:var(--text-dim);line-height:1.6;">
-                                <li><strong>Fluency & Coherence:</strong> Speak smoothly for 2 minutes without
-                                    long pauses</li>
-                                <li><strong>Lexical Resource:</strong> Use a wide range of vocabulary naturally
-                                </li>
-                                <li><strong>Grammatical Range:</strong> Use complex sentence structures
-                                    accurately</li>
-                                <li><strong>Pronunciation:</strong> Be clear and easy to understand</li>
-                            </ul>
-                        </details>
-
-                        <button onclick="app.nextPart2Topic()"
-                            style="background:var(--primary);color:#000;border:none;padding:1rem 3rem;border-radius:99px;cursor:pointer;font-weight:700;font-size:1.2rem;box-shadow:0 0 20px var(--primary);">Next
-                            ▶</button>
-                        <button onclick="app.goToPart3()"
-                            style="background:var(--accent);color:#fff;border:none;padding:1rem 3rem;border-radius:99px;cursor:pointer;font-weight:700;font-size:1.2rem;box-shadow:0 0 20px var(--accent);margin-top:1rem;">Part
-                            3: Discussion ➡</button>
                     </div>
-                </div>
 
-                <!-- Part 3 Content -->
-                <div id="part3-practice-content" style="display:none;">
-                    <button onclick="app.showView('dashboard')" class="interactive"
-                        style="position:absolute;top:1rem;left:1rem;background:0 0;border:1px solid var(--glass-border);color:var(--text-dim);padding:.5rem 1rem;border-radius:12px;cursor:pointer;">←
-                        Exit</button>
-
-                    <div style="text-align:center;max-width:800px;margin:0 auto;">
-                        <div style="margin-bottom:1.5rem;">
-                            <span
-                                style="color:var(--accent);font-weight:700;letter-spacing:.1em;text-transform:uppercase;">PART
-                                3: DISCUSSION</span>
-                            <div id="part3-topic-title" style="font-size:1.5rem;font-weight:900;margin-top:0.5rem;">
-                                Topic Title</div>
-                        </div>
-
-                        <div class="glass-panel" style="padding:2rem;margin-bottom:2rem;text-align:left;">
-                            <h3 style="margin-bottom:1.5rem;color:var(--primary);">Discussion Questions</h3>
-                            <ul id="part3-questions-list" style="list-style:none;padding:0;margin-bottom:2rem;">
-                            </ul>
-
-                            <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1rem;">
-                                <button onclick="app.togglePart3Content('templates')" class="part3-toggle-btn"
-                                    style="background:var(--glass);border:1px solid var(--glass-border);color:var(--text);padding:0.5rem 1rem;border-radius:8px;cursor:pointer;">📝
-                                    Templates</button>
-                                <button onclick="app.togglePart3Content('vocabulary')" class="part3-toggle-btn"
-                                    style="background:var(--glass);border:1px solid var(--glass-border);color:var(--text);padding:0.5rem 1rem;border-radius:8px;cursor:pointer;">📚
-                                    Vocabulary</button>
-                                <button onclick="app.togglePart3Content('sample')" class="part3-toggle-btn"
-                                    style="background:var(--glass);border:1px solid var(--glass-border);color:var(--text);padding:0.5rem 1rem;border-radius:8px;cursor:pointer;">💡
-                                    Sample Answer</button>
+                    <!-- Stats View -->
+                    <div id="view-stats" class="view" style="overflow-y:auto;">
+                        <h3>Your Progress & History 📊</h3>
+                        <div class="stats-grid">
+                            <div class="stat-card glass-panel">
+                                <div class="stat-value" id="stats-total">0</div>
+                                <div class="stat-label">Total Questions</div>
                             </div>
-
-                            <div id="part3-templates" class="part3-hidden-content"
-                                style="display:none;background:rgba(255,255,255,0.03);padding:1rem;border-radius:12px;margin-bottom:1rem;">
-                                <h4 style="color:var(--text-dim);margin-bottom:0.5rem;">Useful Phrases</h4>
-                                <ul id="part3-templates-list" style="padding-left:1.5rem;color:var(--text-dim);"></ul>
+                            <div class="stat-card glass-panel">
+                                <div class="stat-value" id="stats-time">0m</div>
+                                <div class="stat-label">Total Time</div>
                             </div>
-
-                            <div id="part3-vocabulary" class="part3-hidden-content"
-                                style="display:none;background:rgba(255,255,255,0.03);padding:1rem;border-radius:12px;margin-bottom:1rem;">
-                                <h4 style="color:var(--text-dim);margin-bottom:0.5rem;">Key Vocabulary</h4>
-                                <ul id="part3-vocab-list" style="padding-left:1.5rem;color:var(--text-dim);">
-                                </ul>
-                            </div>
-
-                            <div id="part3-sample" class="part3-hidden-content"
-                                style="display:none;background:rgba(255,255,255,0.03);padding:1rem;border-radius:12px;margin-bottom:1rem;">
-                                <h4 style="color:var(--text-dim);margin-bottom:0.5rem;">Sample Answer</h4>
-                                <p id="part3-sample-text" style="color:var(--text-dim);line-height:1.6;"></p>
+                            <div class="stat-card glass-panel">
+                                <div class="stat-value" id="stats-streak">0</div>
+                                <div class="stat-label">Best Streak</div>
                             </div>
                         </div>
-
-                        <div id="part3-timer-area" style="margin-bottom:2rem;">
-                            <div id="part3-timer-display" style="font-size:2.5rem;font-weight:900;margin-bottom:1rem;">
-                                0:00</div>
+                        <div style="margin-top:2rem;">
+                            <h4>Visit History</h4>
+                            <div id="history-list" style="margin-top:1rem;"></div>
                         </div>
-
-                        <button onclick="app.finishPractice()"
-                            style="background:var(--success);color:#000;border:none;padding:1rem 3rem;border-radius:99px;cursor:pointer;font-weight:700;font-size:1.2rem;box-shadow:0 0 20px var(--success);">Finish
-                            Practice 🏁</button>
+                        <div style="margin-top:2rem;">
+                            <h4>Category Progress</h4>
+                            <div id="category-progress" style="margin-top:1rem;"></div>
+                        </div>
                     </div>
+
                 </div>
+            </main>
 
         </div>
-
-        <!-- Stats View -->
-        <div id="view-stats" class="view" style="overflow-y:auto;">
-            <h3>Your Progress & History 📊</h3>
-            <div class="stats-grid">
-                <div class="stat-card glass-panel">
-                    <div class="stat-value" id="stats-total">0</div>
-                    <div class="stat-label">Total Questions</div>
-                </div>
-                <div class="stat-card glass-panel">
-                    <div class="stat-value" id="stats-time">0m</div>
-                    <div class="stat-label">Total Time</div>
-                </div>
-                <div class="stat-card glass-panel">
-                    <div class="stat-value" id="stats-streak">0</div>
-                    <div class="stat-label">Best Streak</div>
-                </div>
-            </div>
-            <div style="margin-top:2rem;">
-                <h4>Visit History</h4>
-                <div id="history-list" style="margin-top:1rem;"></div>
-            </div>
-            <div style="margin-top:2rem;">
-                <h4>Category Progress</h4>
-                <div id="category-progress" style="margin-top:1rem;"></div>
-            </div>
-        </div>
-
-    </div>
-    </main>
-
-    </div>
     </div>
 
     <!-- Scripts -->
