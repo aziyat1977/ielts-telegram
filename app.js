@@ -655,7 +655,67 @@ class IELTSApp {
         document.getElementById('stats-streak').textContent = this.userData.bestStreak;
         this.renderHistory();
         this.renderCategoryProgress();
+        this.renderCampaigns(); // FIXED: Make campaign buttons clickable
     }
+
+    renderCampaigns() {
+        const grid = document.getElementById('campaign-grid');
+        if (!grid) return;
+
+        const campaigns = [
+            { level: 'beginner', name: 'Beginner', icon: '🌱', color: 'var(--success)', count: Object.keys(topicMeta).filter(k => topicMeta[k].campaign === 'beginner').length },
+            { level: 'intermediate', name: 'Intermediate', icon: '🚀', color: 'var(--warning)', count: Object.keys(topicMeta).filter(k => topicMeta[k].campaign === 'intermediate').length },
+            { level: 'advanced', name: 'Advanced', icon: '🏆', color: 'var(--accent)', count: Object.keys(topicMeta).filter(k => topicMeta[k].campaign === 'advanced').length }
+        ];
+
+        grid.innerHTML = campaigns.map(c => `
+            <div class="campaign-btn glass-panel" onclick="app.selectCampaign('${c.level}')" style="cursor:pointer;">
+                <div style="font-size:3rem;margin-bottom:1rem;">${c.icon}</div>
+                <h3 style="color:${c.color};">${c.name}</h3>
+                <p style="color:var(--text-dim);font-size:0.9rem;margin-top:0.5rem;">${c.count} Topics</p>
+            </div>
+        `).join('');
+    }
+
+    selectCampaign(level) {
+        // Start Part 1 practice with filtered topics
+        const filtered = Object.keys(topicMeta).filter(k => topicMeta[k].campaign === level);
+        if (filtered.length > 0) {
+            this.selectCategory(filtered[0]);
+            this.startPractice();
+        }
+    }
+
+    startPart2Practice(category = 'all') {
+        this.state.part2List = category === 'all'
+            ? part2Topics
+            : part2Topics.filter(t => t.category === category);
+
+        if (this.state.part2List.length === 0) {
+            alert('No topics available for this category');
+            return;
+        }
+
+        this.state.part2Index = 0;
+        this.state.practiceMode = 'part2';
+        this.showView('practice');
+        this.renderPart2CueCard();
+    }
+
+    startPart3Practice(topicId = null) {
+        // Load Part 3 topic (either specific or first one)
+        const topic = topicId ? part3Topics.find(t => t.id === topicId) : part3Topics[0];
+        if (!topic) {
+            alert('No Part 3 topics available');
+            return;
+        }
+
+        this.state.part3Topic = topic;
+        this.state.practiceMode = 'part3';
+        this.showView('practice');
+        this.renderPart3Content();
+    }
+
 
     updateHeader() {
         document.getElementById('current-level').textContent = this.userData.level;
