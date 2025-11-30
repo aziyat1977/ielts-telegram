@@ -3,17 +3,32 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>IELTS Academy</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IELTS Speaking Academy</title>
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#00f5ff">
+    <link rel="icon" type="image/png" href="/icon-192.png">
+
+    <!-- Telegram WebApp SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+    <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+
+    <!-- Three.js for 3D background (lazy loaded) -->
     <script
         type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.module.js"}}</script>
+
+    <!-- GSAP for animations -->
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.2/dist/gsap.min.js"></script>
+
     <style>
         * {
             margin: 0;
             padding: 0;
-            box-sizing: border-box
+            box-sizing: border-box;
         }
 
         body {
@@ -21,7 +36,7 @@
             background: var(--bg);
             color: var(--text);
             overflow-x: hidden;
-            min-height: 100vh
+            min-height: 100vh;
         }
 
         :root[data-theme=dark] {
@@ -34,7 +49,7 @@
             --secondary: #7b2cbf;
             --accent: #ff006e;
             --success: #00ff9f;
-            --warning: #ffba08
+            --warning: #ffba08;
         }
 
         :root[data-theme=light] {
@@ -47,549 +62,635 @@
             --secondary: #7b2cbf;
             --accent: #e31b6d;
             --success: #10b981;
-            --warning: #f59e0b
+            --warning: #f59e0b;
         }
 
         #loader {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
+            inset: 0;
             background: var(--bg);
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 9999
+            z-index: 9999;
+            transition: opacity .5s;
+        }
+
+        #loader.hidden {
+            opacity: 0;
+            pointer-events: none;
         }
 
         .loader-text {
-            font-size: 1.5rem;
-            font-weight: 900;
-            background: linear-gradient(90deg, var(--primary), var(--accent));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            animation: pulse 2s ease-in-out infinite
-        }
-
-        @keyframes pulse {
-
-            0%,
-            100% {
-                opacity: 1
-            }
-
-            50% {
-                opacity: .5
-            }
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--primary);
+            letter-spacing: .1em;
         }
 
         #canvas-container {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            inset: 0;
             z-index: 0;
-            opacity: .4
         }
 
         #ui-layer {
             position: relative;
             z-index: 1;
-            min-height: 100vh
         }
 
         .main-container {
             display: grid;
             grid-template-columns: 280px 1fr;
-            gap: 2rem;
-            padding: 2rem;
-            max-width: 1600px;
-            margin: 0 auto;
-            opacity: 0;
-            transition: opacity .5s ease
+            min-height: 100vh;
+            padding: 1.5rem;
+            gap: 1.5rem;
         }
 
         .glass-panel {
             background: var(--glass);
-            backdrop-filter: blur(20px);
             border: 1px solid var(--glass-border);
-            border-radius: 24px;
-            padding: 1.5rem;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, .1)
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
         }
 
         .sidebar {
+            padding: 1.5rem;
             display: flex;
             flex-direction: column;
-            height: calc(100vh - 4rem);
-            overflow-y: auto;
+            gap: 1rem;
+            height: calc(100vh - 3rem);
             position: sticky;
-            top: 2rem;
-            scrollbar-width: thin;
-            scrollbar-color: var(--primary) transparent
-        }
-
-        .sidebar::-webkit-scrollbar {
-            width: 6px
-        }
-
-        .sidebar::-webkit-scrollbar-thumb {
-            background: var(--primary);
-            border-radius: 10px
+            top: 1.5rem;
         }
 
         .brand {
-            font-size: 1.5rem;
+            font-size: 1.3rem;
             font-weight: 900;
-            background: linear-gradient(135deg, var(--primary), var(--accent));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 1.5rem;
-            text-align: center
+            color: var(--primary);
+            text-align: center;
+            margin-bottom: 1rem;
         }
 
         .category-btn {
-            width: 100%;
-            padding: .75rem 1rem;
-            margin-bottom: .5rem;
-            background: rgba(255, 255, 255, .02);
-            border: 1px solid var(--glass-border);
-            border-radius: 12px;
+            background: transparent;
+            border: none;
             color: var(--text);
-            font-size: .9rem;
+            padding: .75rem 1rem;
+            border-radius: 12px;
             cursor: pointer;
-            transition: all .3s ease;
             display: flex;
             align-items: center;
-            gap: .75rem
+            gap: .5rem;
+            transition: all .2s;
+            font-size: .9rem;
         }
 
-        .category-btn:hover {
-            background: rgba(255, 255, 255, .08);
-            border-color: var(--primary);
-            transform: translateX(4px)
-        }
-
+        .category-btn:hover,
         .category-btn.active {
-            background: linear-gradient(135deg, var(--primary), var(--accent));
-            color: #000;
-            font-weight: 700;
-            border-color: transparent
-        }
-
-        .category-btn span:first-child {
-            font-size: 1.2rem
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
         }
 
         .category-count {
             margin-left: auto;
-            font-size: .75rem;
+            font-size: .8rem;
             opacity: .7;
-            padding: .25rem .5rem;
-            background: rgba(0, 0, 0, .2);
-            border-radius: 8px
+        }
+
+        .content-area {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
         }
 
         .header {
+            padding: 1.5rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 2rem
-        }
-
-        .header h2 {
-            font-size: 2rem;
-            font-weight: 900
         }
 
         .header-controls {
             display: flex;
             gap: 1rem;
-            align-items: center
-        }
-
-        #streak-display {
-            padding: .5rem 1rem;
-            background: rgba(255, 255, 255, .05);
-            border-radius: 12px;
-            font-size: .9rem
+            align-items: center;
         }
 
         .theme-toggle {
-            width: 48px;
-            height: 48px;
-            border: none;
             background: var(--glass);
-            border-radius: 50%;
-            font-size: 1.5rem;
+            border: 1px solid var(--glass-border);
+            color: var(--text);
+            padding: .5rem 1rem;
+            border-radius: 12px;
             cursor: pointer;
-            transition: transform .3s ease
-        }
-
-        .theme-toggle:hover {
-            transform: rotate(20deg) scale(1.1)
+            font-size: 1.2rem;
         }
 
         .view-container {
-            min-height: 60vh
+            padding: 2rem;
+            flex: 1;
         }
 
         .view {
-            display: none
+            display: none;
         }
 
         .view.active {
-            display: block
+            display: block;
         }
 
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1.5rem;
-            margin: 2rem 0
+            gap: 1rem;
+            margin-top: 1.5rem;
         }
 
         .stat-card {
+            padding: 1.5rem;
             text-align: center;
-            padding: 2rem 1rem
         }
 
         .stat-value {
-            font-size: 3rem;
+            font-size: 2.5rem;
             font-weight: 900;
-            background: linear-gradient(135deg, var(--primary), var(--accent));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text
+            color: var(--primary);
         }
 
         .stat-label {
-            font-size: .85rem;
+            margin-top: .5rem;
+            font-size: .9rem;
             color: var(--text-dim);
-            margin-top: .5rem
         }
 
         .progress-bar {
             width: 100%;
             height: 8px;
-            background: rgba(255, 255, 255, .1);
-            border-radius: 10px;
+            background: var(--glass);
+            border-radius: 4px;
             overflow: hidden;
-            margin-top: .5rem
+            margin-top: .5rem;
         }
 
         .progress-fill {
             height: 100%;
-            background: linear-gradient(90deg, var(--success), var(--primary));
-            border-radius: 10px;
-            transition: width .5s ease
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            transition: width .3s;
+        }
+
+        .campaign-btn {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            padding: 1.5rem;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all .3s;
+        }
+
+        .campaign-btn:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0, 245, 255, .2);
         }
 
         .campaign-badge {
             display: inline-block;
             padding: .25rem .75rem;
-            border-radius: 99px;
-            font-size: .7rem;
+            border-radius: 8px;
+            font-size: .8rem;
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: .05em;
-            margin-left: .5rem
+            margin-left: .5rem;
         }
 
         .campaign-beginner {
             background: var(--success);
-            color: #fff
+            color: #000;
         }
 
         .campaign-intermediate {
             background: var(--warning);
-            color: #fff
+            color: #000;
         }
 
         .campaign-advanced {
             background: var(--accent);
-            color: #fff
-        }
-
-        .translation-toggle {
-            display: flex;
-            gap: 1rem;
-            justify-content: center;
-            margin: 1rem 0
-        }
-
-        .lang-btn {
-            padding: .5rem 1.5rem;
-            background: var(--glass);
-            border: 1px solid var(--glass-border);
-            border-radius: 12px;
-            color: var(--text);
-            cursor: pointer;
-            transition: all .3s ease
-        }
-
-        .lang-btn:hover {
-            border-color: var(--primary)
-        }
-
-        .lang-btn.active {
-            background: var(--primary);
-            color: #000;
-            border-color: var(--primary)
+            color: #fff;
         }
 
         .translation {
             max-height: 0;
             opacity: 0;
             overflow: hidden;
-            transition: all .3s ease;
+            transition: all .3s;
+            margin: .5rem 0;
             color: var(--text-dim);
             font-style: italic;
-            text-align: center;
-            margin: .5rem 0
         }
 
         .translation.show {
             max-height: 200px;
-            opacity: 1
+            opacity: 1;
         }
 
-        .audio-player {
+        .lang-btn {
             background: var(--glass);
             border: 1px solid var(--glass-border);
-            border-radius: 16px;
-            padding: 1.5rem;
-            margin: 1.5rem auto;
-            max-width: 400px;
-            opacity: 0;
-            max-height: 0;
-            overflow: hidden;
-            transition: all .4s ease
+            color: var(--text);
+            padding: .5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all .2s;
         }
 
-        .audio-player.show {
-            opacity: 1;
-            max-height: 200px
-        }
-
-        .audio-controls {
-            display: flex;
-            gap: .75rem;
-            margin-top: 1rem;
-            justify-content: center
-        }
-
-        .audio-btn {
-            padding: .75rem 1.5rem;
+        .lang-btn.active {
             background: var(--primary);
             color: #000;
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: transform .2s ease
-        }
-
-        .audio-btn:hover {
-            transform: translateY(-2px)
-        }
-
-        #checkpoint-markers {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%
-        }
-
-        .checkpoint-marker {
-            position: absolute;
-            top: -4px;
-            width: 4px;
-            height: 16px;
-            background: var(--warning);
-            border-radius: 2px;
-            transform: translateX(-2px)
         }
 
         .interactive {
             cursor: pointer;
-            user-select: none
+            user-select: none;
         }
 
         button {
-            font-family: inherit
+            font-family: inherit;
         }
 
-        @media (max-width:900px) {
+        @media (max-width: 900px) {
             .main-container {
                 grid-template-columns: 1fr;
-                padding: 1rem
+                padding: 1rem;
             }
 
             .sidebar {
                 position: relative;
                 height: auto;
-                max-height: 400px
+                max-height: 400px;
             }
+        }
 
-            .header h2 {
-                font-size: 1.5rem
-            }
+        /* Timer styles */
+        .timer-green {
+            color: var(--success);
+        }
 
-            .stat-value {
-                font-size: 2rem
-            }
+        .timer-yellow {
+            color: var(--warning);
+        }
+
+        .timer-red {
+            color: var(--accent);
+        }
+
+        .timer-finished {
+            color: var(--text-dim);
         }
     </style>
 </head>
 
 <body>
-    <div id=loader>
-        <div class=loader-text>INITIALIZING IELTS ACADEMY...</div>
+    <!-- Loading Screen -->
+    <div id="loader">
+        <div class="loader-text">INITIALIZING IELTS ACADEMY...</div>
     </div>
-    <div id=canvas-container></div>
-    <div id=ui-layer>
+
+    <!-- 3D Background Canvas -->
+    <div id="canvas-container"></div>
+
+    <!-- Main UI -->
+    <div id="ui-layer">
         <div class="main-container interactive">
+
+            <!-- Sidebar -->
             <aside class="sidebar glass-panel">
-                <div class=brand>IELTS ACADEMY</div><button class="category-btn active"
-                    onclick="app.selectCategory('all', this)"><span>🎯</span> All Topics<span
-                        class=category-count>135</span></button>
-                <div id=category-list></div>
-                <div style="margin-top:auto;padding-top:1rem;border-top:1px solid var(--glass-border)"><button
-                        class=category-btn onclick="app.showView('stats')"><span>📊</span> Stats &
-                        History</button><button class=category-btn onclick=app.resetProgress()
-                        style="color:var(--accent)"><span>🔄</span> Reset Progress</button></div>
+                <div class="brand">IELTS ACADEMY</div>
+
+                <!-- Language Switcher -->
+                <div style="display:flex;gap:.5rem;margin-bottom:1rem;">
+                    <button class="lang-btn active" data-lang="en" onclick="app.setLanguage('en')">EN</button>
+                    <button class="lang-btn" data-lang="ru" onclick="app.setLanguage('ru')">RU</button>
+                    <button class="lang-btn" data-lang="uz" onclick="app.setLanguage('uz')">UZ</button>
+                </div>
+
+                <!-- Part 1 Categories -->
+                <button class="category-btn active" onclick="app.selectCategory('all', this)">
+                    <span>🎯</span> All Topics
+                    <span class="category-count">135</span>
+                </button>
+                <div id="category-list"></div>
+
+                <!-- Bottom Actions -->
+                <div style="margin-top:auto;padding-top:1rem;border-top:1px solid var(--glass-border);">
+                    <button class="category-btn" onclick="app.showView('stats')">
+                        <span>📊</span> Stats & History
+                    </button>
+                    <button class="category-btn" onclick="app.resetProgress()" style="color:var(--accent)">
+                        <span>🔄</span> Reset Progress
+                    </button>
+                </div>
             </aside>
-            <main class=content-area>
+
+            <!-- Main Content -->
+            <main class="content-area">
+
+                <!-- Header -->
                 <header class="header glass-panel">
                     <div>
-                        <h2 id=header-title>Dashboard</h2>
-                        <div style="font-size:.8rem;color:var(--text-dim);margin-top:.3rem" id=header-subtitle>Level
-                            <span id=current-level>1</span> • <span id=current-xp>0</span> XP
+                        <h2 id="header-title">Dashboard</h2>
+                        <div style="font-size:.8rem;color:var(--text-dim);margin-top:.3rem;" id="header-subtitle">
+                            Level <span id="current-level">1</span> • <span id="current-xp">0</span> XP
                         </div>
                     </div>
-                    <div class=header-controls><span id=streak-display>🔥 <span id=streak-count>0</span> days</span>
-                        <button class=theme-toggle onclick=app.toggleTheme() id=theme-btn>🌙</button>
+                    <div class="header-controls">
+                        <span id="streak-display">🔥 <span id="streak-count">0</span> days</span>
+                        <button class="theme-toggle" onclick="app.toggleTheme()" id="theme-btn">🌙</button>
                     </div>
                 </header>
+
+                <!-- Views Container -->
                 <div class="view-container glass-panel">
-                    <div id=view-dashboard class="view active">
+
+                    <!-- Dashboard View -->
+                    <div id="view-dashboard" class="view active">
                         <h3>Welcome, Champion! 🏆</h3>
-                        <div class=stats-grid>
+                        <div class="stats-grid">
                             <div class="stat-card glass-panel">
-                                <div class=stat-value id=dash-level>1</div>
-                                <div class=stat-label>Level</div>
-                                <div class=progress-bar>
-                                    <div class=progress-fill id=dash-level-progress style="width:0%"></div>
+                                <div class="stat-value" id="dash-level">1</div>
+                                <div class="stat-label">Level</div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" id="dash-level-progress" style="width:0%"></div>
                                 </div>
                             </div>
                             <div class="stat-card glass-panel">
-                                <div class=stat-value id=dash-answered>0</div>
-                                <div class=stat-label>Questions Answered</div>
+                                <div class="stat-value" id="dash-answered">0</div>
+                                <div class="stat-label">Questions Answered</div>
                             </div>
                             <div class="stat-card glass-panel">
-                                <div class=stat-value id=dash-categories>0/27</div>
-                                <div class=stat-label>Categories Mastered</div>
+                                <div class="stat-value" id="dash-categories">0/27</div>
+                                <div class="stat-label">Categories Mastered</div>
                             </div>
                         </div>
-                        <div style="margin-top:2rem">
+
+                        <div style="margin-top:2rem;">
                             <h4>Start Practicing</h4>
-                            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1.5rem;margin-top:1rem"
-                                id=campaign-grid></div>
+                            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1.5rem;margin-top:1rem;"
+                                id="campaign-grid"></div>
                         </div>
                     </div>
-                    <div id=view-practice class=view style="text-align:center;justify-content:center"><button
-                            onclick="app.showView('dashboard')" class=interactive
-                            style="position:absolute;top:1rem;left:1rem;background:0 0;border:1px solid var(--glass-border);color:var(--text-dim);padding:.5rem 1rem;border-radius:12px;cursor:pointer">←
-                            Exit</button>
-                        <div>
-                            <div style="margin-bottom:1.5rem"><span id=p-topic
-                                    style="color:var(--primary);font-weight:700;letter-spacing:.1em;text-transform:uppercase">TOPIC</span>
-                                <span id=p-campaign class=campaign-badge></span>
-                                <div style="font-size:.8rem;color:var(--text-dim);margin-top:.5rem">Question <span
-                                        id=p-current>1</span> of <span id=p-total>10</span></div>
-                                <div class=progress-bar style="max-width:400px;margin:.5rem auto;position:relative">
-                                    <div class=progress-fill id=p-progress style="width:0%"></div>
-                                    <div id=checkpoint-markers></div>
+
+                    <!-- Practice View (Part 1/2/3) -->
+                    <div id="view-practice" class="view" style="text-align:center;">
+
+                        <!-- Part 1 Content -->
+                        <div id="part1-practice-content">
+                            <button onclick="app.showView('dashboard')" class="interactive"
+                                style="position:absolute;top:1rem;left:1rem;background:0 0;border:1px solid var(--glass-border);color:var(--text-dim);padding:.5rem 1rem;border-radius:12px;cursor:pointer;">←
+                                Exit</button>
+
+                            <div style="margin-bottom:1.5rem;">
+                                <span id="p-topic"
+                                    style="color:var(--primary);font-weight:700;letter-spacing:.1em;text-transform:uppercase;">TOPIC</span>
+                                <span id="p-campaign" class="campaign-badge"></span>
+                                <div style="font-size:.8rem;color:var(--text-dim);margin-top:.5rem;">
+                                    Question <span id="p-current">1</span> of <span id="p-total">10</span>
+                                </div>
+                                <div class="progress-bar" style="max-width:400px;margin:.5rem auto;">
+                                    <div class="progress-fill" id="p-progress" style="width:0%"></div>
                                 </div>
                             </div>
-                            <h2 id=p-question style="font-size:2rem;margin:1rem auto;max-width:700px;line-height:1.3">
-                                Loading...</h2>
-                            <div class=translation-toggle><button class=lang-btn
-                                    onclick="app.toggleTranslation('ru', this)">🇷🇺 RU</button> <button class=lang-btn
-                                    onclick="app.toggleTranslation('uz', this)">🇺🇿 UZ</button></div>
-                            <div id=p-translation-ru class=translation></div>
-                            <div id=p-translation-uz class=translation></div>
-                            <p id=p-hint style="color:var(--text-dim);font-size:1rem;min-height:1.5em;margin:1rem 0">
+
+                            <h2 id="p-question" style="font-size:2rem;margin:1rem auto;max-width:700px;">Loading...</h2>
+
+                            <div style="display:flex;gap:.5rem;justify-content:center;margin:1rem 0;">
+                                <button class="lang-btn" onclick="app.toggleTranslation('ru', this)">🇷🇺 RU</button>
+                                <button class="lang-btn" onclick="app.toggleTranslation('uz', this)">🇺🇿 UZ</button>
+                            </div>
+
+                            <div id="p-translation-ru" class="translation"></div>
+                            <div id="p-translation-uz" class="translation"></div>
+
+                            <p id="p-hint" style="color:var(--text-dim);font-size:1rem;min-height:1.5em;margin:1rem 0;">
                             </p>
-                            <div id=visualizer-area style="width:100%;height:120px;margin:1.5rem 0"></div>
-                            <div class=audio-player id=audio-player>
-                                <div>Your Recording</div>
-                                <div class=audio-controls><button class=audio-btn onclick=app.playRecording()>▶
-                                        Play</button> <button class=audio-btn onclick=app.downloadRecording()>⬇
-                                        Download</button> <button class=audio-btn onclick=app.deleteRecording()
-                                        style="background:var(--accent)">🗑 Delete</button></div>
-                                <div id=recording-duration
-                                    style="margin-top:.5rem;color:var(--text-dim);font-size:.8rem">0:00</div>
+
+                            <div style="display:flex;gap:1rem;justify-content:center;margin-top:1.5rem;">
+                                <button onclick="app.toggleHint()"
+                                    style="background:var(--glass);border:1px solid var(--glass-border);color:var(--text);padding:1rem 2rem;border-radius:99px;cursor:pointer;">💡
+                                    Hint</button>
+                                <button id="btn-record" onclick="app.toggleRecord()"
+                                    style="background:var(--accent);border:none;color:#fff;padding:1rem 3rem;border-radius:99px;font-weight:700;font-size:1.1rem;cursor:pointer;box-shadow:0 0 20px var(--accent);">🎙️
+                                    Record</button>
+                                <button onclick="app.nextQuestion()"
+                                    style="background:var(--primary);color:#000;border:none;padding:1rem 2rem;border-radius:99px;cursor:pointer;font-weight:700;">Next
+                                    ▶</button>
                             </div>
-                            <div class=interactive
-                                style="display:flex;gap:1rem;justify-content:center;margin-top:1.5rem"><button
-                                    onclick=app.toggleHint()
-                                    style="background:var(--glass);border:1px solid var(--glass-border);color:var(--text);padding:1rem 2rem;border-radius:99px;cursor:pointer">💡
-                                    Hint</button> <button id=btn-record onclick=app.toggleRecord()
-                                    style="background:var(--accent);border:none;color:#fff;padding:1rem 3rem;border-radius:99px;font-weight:700;font-size:1.1rem;cursor:pointer;box-shadow:0 0 20px var(--accent)">🎙️
-                                    Record</button> <button onclick=app.nextQuestion()
-                                    style="background:var(--primary);color:#000;border:none;padding:1rem 2rem;border-radius:99px;cursor:pointer;font-weight:700">Next
-                                    ▶</button></div>
                         </div>
+
+                        <!-- Part 2 Content -->
+                        <div id="part2-practice-content" style="display:none;">
+                            <button onclick="app.showView('dashboard')" class="interactive"
+                                style="position:absolute;top:1rem;left:1rem;background:0 0;border:1px solid var(--glass-border);color:var(--text-dim);padding:.5rem 1rem;border-radius:12px;cursor:pointer;">←
+                                Exit</button>
+
+                            <div style="text-align:center;max-width:800px;margin:0 auto;">
+                                <div style="margin-bottom:1.5rem;">
+                                    <span
+                                        style="color:var(--accent);font-weight:700;letter-spacing:.1em;text-transform:uppercase;">PART
+                                        2: CUE CARD</span>
+                                    <div id="part2-title" style="font-size:1.5rem;font-weight:900;margin-top:0.5rem;">
+                                        Describe...</div>
+                                </div>
+
+                                <div class="glass-panel" style="padding:2rem;margin-bottom:2rem;text-align:left;">
+                                    <h3 id="part2-cue-title" style="margin-bottom:1rem;">Topic Title</h3>
+                                    <div style="margin-bottom:1rem;color:var(--text-dim);">You should say:</div>
+                                    <div id="part2-bullets"
+                                        style="margin-bottom:1.5rem;padding-left:1.5rem;line-height:1.6;"></div>
+
+                                    <div style="display:flex;gap:.5rem;margin-bottom:1rem;">
+                                        <button class="lang-btn" onclick="app.toggleTranslation('ru', this)">🇷🇺
+                                            RU</button>
+                                        <button class="lang-btn" onclick="app.toggleTranslation('uz', this)">🇺🇿
+                                            UZ</button>
+                                    </div>
+
+                                    <div id="part2-translation-ru" class="translation"></div>
+                                    <div id="part2-translation-uz" class="translation"></div>
+                                </div>
+
+                                <div id="part2-timer-area" style="margin-bottom:2rem;">
+                                    <div id="part2-timer-display"
+                                        style="font-size:2.5rem;font-weight:900;margin-bottom:1rem;transition:color 0.3s;"
+                                        onclick="app.togglePart2Timer()" class="interactive">0:00</div>
+                                    <button onclick="app.togglePart2Timer()"
+                                        style="background:var(--glass);border:1px solid var(--glass-border);color:var(--text);padding:0.5rem 1rem;border-radius:8px;cursor:pointer;">Skip
+                                        Phase</button>
+                                </div>
+
+                                <details
+                                    style="text-align:left;margin-bottom:2rem;background:rgba(255,255,255,0.03);padding:1rem;border-radius:12px;">
+                                    <summary style="cursor:pointer;font-weight:600;color:var(--primary);">📋 IELTS
+                                        Assessment Criteria</summary>
+                                    <ul
+                                        style="margin-top:1rem;padding-left:1.5rem;font-size:0.9rem;color:var(--text-dim);line-height:1.6;">
+                                        <li><strong>Fluency & Coherence:</strong> Speak smoothly for 2 minutes without
+                                            long pauses</li>
+                                        <li><strong>Lexical Resource:</strong> Use a wide range of vocabulary naturally
+                                        </li>
+                                        <li><strong>Grammatical Range:</strong> Use complex sentence structures
+                                            accurately</li>
+                                        <li><strong>Pronunciation:</strong> Be clear and easy to understand</li>
+                                    </ul>
+                                </details>
+
+                                <button onclick="app.nextPart2Topic()"
+                                    style="background:var(--primary);color:#000;border:none;padding:1rem 3rem;border-radius:99px;cursor:pointer;font-weight:700;font-size:1.2rem;box-shadow:0 0 20px var(--primary);">Next
+                                    ▶</button>
+                                <button onclick="app.goToPart3()"
+                                    style="background:var(--accent);color:#fff;border:none;padding:1rem 3rem;border-radius:99px;cursor:pointer;font-weight:700;font-size:1.2rem;box-shadow:0 0 20px var(--accent);margin-top:1rem;">Part
+                                    3: Discussion ➡</button>
+                            </div>
+                        </div>
+
+                        <!-- Part 3 Content -->
+                        <div id="part3-practice-content" style="display:none;">
+                            <button onclick="app.showView('dashboard')" class="interactive"
+                                style="position:absolute;top:1rem;left:1rem;background:0 0;border:1px solid var(--glass-border);color:var(--text-dim);padding:.5rem 1rem;border-radius:12px;cursor:pointer;">←
+                                Exit</button>
+
+                            <div style="text-align:center;max-width:800px;margin:0 auto;">
+                                <div style="margin-bottom:1.5rem;">
+                                    <span
+                                        style="color:var(--accent);font-weight:700;letter-spacing:.1em;text-transform:uppercase;">PART
+                                        3: DISCUSSION</span>
+                                    <div id="part3-topic-title"
+                                        style="font-size:1.5rem;font-weight:900;margin-top:0.5rem;">Topic Title</div>
+                                </div>
+
+                                <div class="glass-panel" style="padding:2rem;margin-bottom:2rem;text-align:left;">
+                                    <h3 style="margin-bottom:1.5rem;color:var(--primary);">Discussion Questions</h3>
+                                    <ul id="part3-questions-list" style="list-style:none;padding:0;margin-bottom:2rem;">
+                                    </ul>
+
+                                    <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1rem;">
+                                        <button onclick="app.togglePart3Content('templates')" class="part3-toggle-btn"
+                                            style="background:var(--glass);border:1px solid var(--glass-border);color:var(--text);padding:0.5rem 1rem;border-radius:8px;cursor:pointer;">📝
+                                            Templates</button>
+                                        <button onclick="app.togglePart3Content('vocabulary')" class="part3-toggle-btn"
+                                            style="background:var(--glass);border:1px solid var(--glass-border);color:var(--text);padding:0.5rem 1rem;border-radius:8px;cursor:pointer;">📚
+                                            Vocabulary</button>
+                                        <button onclick="app.togglePart3Content('sample')" class="part3-toggle-btn"
+                                            style="background:var(--glass);border:1px solid var(--glass-border);color:var(--text);padding:0.5rem 1rem;border-radius:8px;cursor:pointer;">💡
+                                            Sample Answer</button>
+                                    </div>
+
+                                    <div id="part3-templates" class="part3-hidden-content"
+                                        style="display:none;background:rgba(255,255,255,0.03);padding:1rem;border-radius:12px;margin-bottom:1rem;">
+                                        <h4 style="color:var(--text-dim);margin-bottom:0.5rem;">Useful Phrases</h4>
+                                        <ul id="part3-templates-list"
+                                            style="padding-left:1.5rem;color:var(--text-dim);"></ul>
+                                    </div>
+
+                                    <div id="part3-vocabulary" class="part3-hidden-content"
+                                        style="display:none;background:rgba(255,255,255,0.03);padding:1rem;border-radius:12px;margin-bottom:1rem;">
+                                        <h4 style="color:var(--text-dim);margin-bottom:0.5rem;">Key Vocabulary</h4>
+                                        <ul id="part3-vocab-list" style="padding-left:1.5rem;color:var(--text-dim);">
+                                        </ul>
+                                    </div>
+
+                                    <div id="part3-sample" class="part3-hidden-content"
+                                        style="display:none;background:rgba(255,255,255,0.03);padding:1rem;border-radius:12px;margin-bottom:1rem;">
+                                        <h4 style="color:var(--text-dim);margin-bottom:0.5rem;">Sample Answer</h4>
+                                        <p id="part3-sample-text" style="color:var(--text-dim);line-height:1.6;"></p>
+                                    </div>
+                                </div>
+
+                                <div id="part3-timer-area" style="margin-bottom:2rem;">
+                                    <div id="part3-timer-display"
+                                        style="font-size:2.5rem;font-weight:900;margin-bottom:1rem;">0:00</div>
+                                </div>
+
+                                <button onclick="app.finishPractice()"
+                                    style="background:var(--success);color:#000;border:none;padding:1rem 3rem;border-radius:99px;cursor:pointer;font-weight:700;font-size:1.2rem;box-shadow:0 0 20px var(--success);">Finish
+                                    Practice 🏁</button>
+                            </div>
+                        </div>
+
                     </div>
-                    <div id=view-stats class=view style="overflow-y:auto">
+
+                    <!-- Stats View -->
+                    <div id="view-stats" class="view" style="overflow-y:auto;">
                         <h3>Your Progress & History 📊</h3>
-                        <div class=stats-grid>
+                        <div class="stats-grid">
                             <div class="stat-card glass-panel">
-                                <div class=stat-value id=stats-total>0</div>
-                                <div class=stat-label>Total Questions</div>
+                                <div class="stat-value" id="stats-total">0</div>
+                                <div class="stat-label">Total Questions</div>
                             </div>
                             <div class="stat-card glass-panel">
-                                <div class=stat-value id=stats-time>0m</div>
-                                <div class=stat-label>Total Time</div>
+                                <div class="stat-value" id="stats-time">0m</div>
+                                <div class="stat-label">Total Time</div>
                             </div>
                             <div class="stat-card glass-panel">
-                                <div class=stat-value id=stats-streak>0</div>
-                                <div class=stat-label>Best Streak</div>
+                                <div class="stat-value" id="stats-streak">0</div>
+                                <div class="stat-label">Best Streak</div>
                             </div>
                         </div>
-                        <div style="margin-top:2rem">
+                        <div style="margin-top:2rem;">
                             <h4>Visit History</h4>
-                            <div id=history-list style="margin-top:1rem"></div>
+                            <div id="history-list" style="margin-top:1rem;"></div>
                         </div>
-                        <div style="margin-top:2rem">
+                        <div style="margin-top:2rem;">
                             <h4>Category Progress</h4>
-                            <div id=category-progress style="margin-top:1rem"></div>
+                            <div id="category-progress" style="margin-top:1rem;"></div>
                         </div>
                     </div>
+
                 </div>
             </main>
+
         </div>
     </div>
 
-    <!-- Load data first (contains topicMeta and questions) -->
+    <!-- Scripts -->
     <script src="data.js"></script>
-
-    <!-- Load Telegram auth integration (optional) -->
     <script src="telegram-auth.js"></script>
-
-    <!-- Load main app logic -->
     <script src="app.js"></script>
 
-    <!-- Initialize the app after all scripts are loaded -->
+    <!-- Initialization -->
     <script>
-        console.log('[Init] Starting app initialization from inline script');
+        console.log('[Init] Starting IELTS Academy');
+
+        // Initialize Telegram WebApp
+        if (window.Telegram?.WebApp) {
+            const tg = window.Telegram.WebApp;
+            tg.ready();
+            tg.expand();
+
+            // Apply Telegram theme
+            document.documentElement.setAttribute('data-theme',
+                tg.colorScheme === 'dark' ? 'dark' : 'light'
+            );
+
+            // Listen for theme changes
+            tg.onEvent('themeChanged', () => {
+                document.documentElement.setAttribute('data-theme',
+                    tg.colorScheme === 'dark' ? 'dark' : 'light'
+                );
+            });
+
+            console.log('[Telegram] WebApp initialized');
+        }
+
+        // Register Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('[SW] Registered:', reg))
+                    .catch(err => console.error('[SW] Registration failed:', err));
+            });
+        }
+
+        // Initialize App
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', initializeApp);
         } else {

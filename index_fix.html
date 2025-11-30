@@ -1,0 +1,105 @@
+\u003cli data-i18n="criteriaFluency">\u003cstrong>Fluency & Coherence:\u003c/strong> Speak
+smoothly for 2 minutes without long pauses\u003c/li>
+\u003cli data-i18n="criteriaLexical">\u003cstrong>Lexical Resource:\u003c/strong> Use a wide
+range of vocabulary naturally\u003c/li>
+\u003cli data-i18n="criteriaGrammar">\u003cstrong>Grammatical Range:\u003c/strong> Use complex
+sentence structures accurately\u003c/li>
+\u003cli data-i18n="criteriaPronunciation">\u003cstrong>Pronunciation:\u003c/strong> Be clear
+and easy to understand\u003c/li>
+\u003c/ul>
+\u003c/details>
+
+\u003cbutton onclick="app.nextPart2Topic()"
+style="background:var(--primary); color:#000; border:none; padding:1rem 3rem; border-radius:99px; cursor:pointer;
+font-weight:700; font-size:1.2rem; box-shadow:0 0 20px var(--primary);">
+\u003cspan data-i18n="next">Next\u003c/span> ▶
+\u003c/button>
+\u003cbutton onclick="app.goToPart3()"
+style="background:var(--accent); color:#fff; border:none; padding:1rem 3rem; border-radius:99px; cursor:pointer;
+font-weight:700; font-size:1.2rem; box-shadow:0 0 20px var(--accent); margin-top: 1rem;">
+\u003cspan>Part 3: Discussion\u003c/span> ➡
+\u003c/button>
+\u003c/div>
+\u003c/div>
+
+\u003cdiv id="part3-practice-content" style="display:none;">
+\u003cbutton onclick="app.showView('dashboard')" class="interactive"
+style="position:absolute;top:1rem;left:1rem;background:0 0;border:1px solid
+var(--glass-border);color:var(--text-dim);padding:.5rem 1rem;border-radius:12px;cursor:pointer">←
+\u003cspan data-i18n="exit">Exit\u003c/span>\u003c/button>
+\u003cdiv style="text-align:center; max-width:800px; margin:0 auto;">
+\u003cdiv style="margin-bottom:1.5rem">
+\u003cspan
+style="color:var(--accent);font-weight:700;letter-spacing:.1em;text-transform:uppercase">PART
+3: DISCUSSION\u003c/span>
+\u003cdiv style="font-size:1.5rem; font-weight:900; margin-top:0.5rem;"
+id="part3-topic-title">Topic Title\u003c/div>
+\u003c/div>
+
+\u003cdiv class="glass-panel"
+style="padding:2rem; margin-bottom:2rem; text-align:left;">
+\u003ch3 style="margin-bottom:1.5rem; color:var(--primary);">Discussion
+Questions\u003c/h3>
+\u003cul id="part3-questions-list"
+style="list-style:none; padding:0; margin-bottom:2rem;">
+\u003c!-- Questions will be injected here -->
+\u003c/ul>
+
+\u003cdiv
+style="display:flex; gap:1rem; flex-wrap:wrap; margin-bottom:1rem;">
+\u003cbutton onclick="app.togglePart3Content('templates')"
+class="part3-toggle-btn"
+style="background:var(--glass); border:1px solid var(--glass-border); color:var(--text); padding:0.5rem 1rem;
+border-radius:8px; cursor:pointer;">📝
+Templates\u003c/button>
+\u003cbutton onclick="app.togglePart3Content('vocabulary')"
+class="part3-toggle-btn"
+style="background:var(--glass); border:1px solid var(--glass-border); color:var(--text); padding:0.5rem 1rem;
+border-radius:8px; cursor:pointer;">📚
+Vocabulary\u003c/button>
+\u003cbutton onclick="app.togglePart3Content('sample')"
+class="part3-toggle-btn"
+style="background:var(--glass); border:1px solid var(--glass-border); color:var(--text); padding:0.5rem 1rem;
+border-radius:8px; cursor:pointer;">💡
+Sample Answer\u003c/button>
+\u003c/div>
+
+\u003cdiv id="part3-templates" class="part3-hidden-content"
+style="display:none; background:rgba(255,255,255,0.03); padding:1rem; border-radius:12px; margin-bottom:1rem;">
+\u003ch4 style="color:var(--text-dim); margin-bottom:0.5rem;">Useful
+Phrases\u003c/h4>
+\u003cul id="part3-templates-list"
+style="padding-left:1.5rem; color:var(--text-dim);">\u003c/ul>
+\u003c/div>
+
+\u003cdiv id="part3-vocabulary" class="part3-hidden-content"
+style="display:none; background:rgba(255,255,255,0.03); padding:1rem; border-radius:12px; margin-bottom:1rem;">
+\u003ch4 style="color:var(--text-dim); margin-bottom:0.5rem;">Key
+Vocabulary\u003c/h4>
+\u003cul id="part3-vocab-list"
+style="padding-left:1.5rem; color:var(--text-dim);">
+\u003c/ul>
+\u003c/div>
+
+\u003cdiv id="part3-sample" class="part3-hidden-content"
+style="display:none; background:rgba(255,255,255,0.03); padding:1rem; border-radius:12px; margin-bottom:1rem;">
+\u003ch4 style="color:var(--text-dim); margin-bottom:0.5rem;">Sample
+Answer\u003c/h4>
+\u003cp id="part3-sample-text"
+style="color:var(--text-dim); line-height:1.6;">\u003c/p>
+\u003c/div>
+\u003c/div>
+
+\u003cdiv id="part3-timer-area" style="margin-bottom:2rem;">
+\u003cdiv id="part3-timer-display"
+style="font-size:2.5rem; font-weight:900; margin-bottom:1rem;">0:00
+\u003c/div>
+\u003c/div>
+
+\u003cbutton onclick="app.finishPractice()"
+style="background:var(--success); color:#000; border:none; padding:1rem 3rem; border-radius:99px; cursor:pointer;
+font-weight:700; font-size:1.2rem; box-shadow:0 0 20px var(--success);">
+\u003cspan>Finish Practice\u003c/span> 🏁
+\u003c/button>
+\u003c/div>
+\u003c/div>

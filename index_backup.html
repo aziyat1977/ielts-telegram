@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>IELTS Academy</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <script
+        type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.module.js"}}</script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.2/dist/gsap.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        body {
+            font-family: Inter, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            overflow-x: hidden;
+            min-height: 100vh
+        }
+
+        :root[data-theme=dark] {
+            --bg: #0a0e27;
+            --glass: rgba(255, 255, 255, .05);
+            --glass-border: rgba(255, 255, 255, .1);
+            --text: #e0e6ff;
+            --text-dim: #8b93b8;
+            --primary: #00f5ff;
+            --secondary: #7b2cbf;
+            --accent: #ff006e;
+            --success: #00ff9f;
+            --warning: #ffba08
+        }
+
+        :root[data-theme=light] {
+            --bg: #f0f4f8;
+            --glass: rgba(0, 0, 0, .03);
+            --glass-border: rgba(0, 0, 0, .08);
+            --text: #1a1d35;
+            --text-dim: #6b7280;
+            --primary: #0066ff;
+            --secondary: #7b2cbf;
+            --accent: #e31b6d;
+            --success: #10b981;
+            --warning: #f59e0b
+        }
+
+        #loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: var(--bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999
+        }
+
+        .loader-text {
+            font-size: 1.5rem;
+            font-weight: 900;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: pulse 2s ease-in-out infinite
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1
+            }
+
+            50% {
+                opacity: .5
+            }
+        }
+
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            opacity: .4
+        }
+
+        #ui-layer {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh
+        }
+
+        .main-container {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 2rem;
+            padding: 2rem;
+            max-width: 1600px;
+            margin: 0 auto;
+            opacity: 0;
+            transition: opacity .5s ease
+        }
+
+        .glass-panel {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 1.5rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, .1)
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 4rem);
+            overflow-y: auto;
+            position: sticky;
+            top: 2rem;
+            scrollbar-width: thin;
+            scrollbar-color: var(--primary) transparent
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 6px
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 10px
+        }
+
+        .brand {
+            font-size: 1.5rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1.5rem;
+            text-align: center
+        }
+
+        .category-btn {
+            width: 100%;
+            padding: .75rem 1rem;
+            margin-bottom: .5rem;
+            background: rgba(255, 255, 255, .02);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            color: var(--text);
+            font-size: .9rem;
+            cursor: pointer;
+            transition: all .3s ease;
+            display: flex;
+            align-items: center;
+            gap: .75rem
+        }
+
+        .category-btn:hover {
+            background: rgba(255, 255, 255, .08);
+            border-color: var(--primary);
+            transform: translateX(4px)
+        }
+
+        .category-btn.active {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: #000;
+            font-weight: 700;
+            border-color: transparent
+        }
+
+        .category-btn span:first-child {
+            font-size: 1.2rem
+        }
+
+        .category-count {
+            margin-left: auto;
+            font-size: .75rem;
+            opacity: .7;
+            padding: .25rem .5rem;
+            background: rgba(0, 0, 0, .2);
+            border-radius: 8px
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem
+        }
+
+        .header h2 {
+            font-size: 2rem;
+            font-weight: 900
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center
+        }
+
+        #streak-display {
+            padding: .5rem 1rem;
+            background: rgba(255, 255, 255, .05);
+            border-radius: 12px;
+            font-size: .9rem
+        }
+
+        .theme-toggle {
+            width: 48px;
+            height: 48px;
+            border: none;
+            background: var(--glass);
+            border-radius: 50%;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: transform .3s ease
+        }
+
+        .theme-toggle:hover {
+            transform: rotate(20deg) scale(1.1)
+        }
+
+        .view-container {
+            min-height: 60vh
+        }
+
+        .view {
+            display: none
+        }
+
+        .view.active {
+            display: block
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0
+        }
+
+        .stat-card {
+            text-align: center;
+            padding: 2rem 1rem
+        }
+
+        .stat-value {
+            font-size: 3rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text
+        }
+
+        .stat-label {
+            font-size: .85rem;
+            color: var(--text-dim);
+            margin-top: .5rem
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, .1);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: .5rem
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--success), var(--primary));
+            border-radius: 10px;
+            transition: width .5s ease
+        }
+
+        .campaign-badge {
+            display: inline-block;
+            padding: .25rem .75rem;
+            border-radius: 99px;
+            font-size: .7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+            margin-left: .5rem
+        }
+
+        .campaign-beginner {
+            background: var(--success);
+            color: #fff
+        }
+
+        .campaign-intermediate {
+            background: var(--warning);
+            color: #fff
+        }
+
+        .campaign-advanced {
+            background: var(--accent);
+            color: #fff
+        }
+
+        .translation-toggle {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin: 1rem 0
+        }
+
+        .lang-btn {
+            padding: .5rem 1.5rem;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            color: var(--text);
+            cursor: pointer;
+            transition: all .3s ease
+        }
+
+        .lang-btn:hover {
+            border-color: var(--primary)
+        }
+
+        .lang-btn.active {
+            background: var(--primary);
+            color: #000;
+            border-color: var(--primary)
+        }
+
+        .translation {
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            transition: all .3s ease;
+            color: var(--text-dim);
+            font-style: italic;
+            text-align: center;
+            margin: .5rem 0
+        }
+
+        .translation.show {
+            max-height: 200px;
+            opacity: 1
+        }
+
+        .audio-player {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin: 1.5rem auto;
+            max-width: 400px;
+            opacity: 0;
+            max-height: 0;
+            overflow: hidden;
+            transition: all .4s ease
+        }
+
+        .audio-player.show {
+            opacity: 1;
+            max-height: 200px
+        }
+
+        .audio-controls {
+            display: flex;
+            gap: .75rem;
+            margin-top: 1rem;
+            justify-content: center
+        }
+
+        .audio-btn {
+            padding: .75rem 1.5rem;
+            background: var(--primary);
+            color: #000;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform .2s ease
+        }
+
+        .audio-btn:hover {
+            transform: translateY(-2px)
+        }
+
+        #checkpoint-markers {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%
+        }
+
+        .checkpoint-marker {
+            position: absolute;
+            top: -4px;
+            width: 4px;
+            height: 16px;
+            background: var(--warning);
+            border-radius: 2px;
+            transform: translateX(-2px)
+        }
+
+        .interactive {
+            cursor: pointer;
+            user-select: none
+        }
+
+        button {
+            font-family: inherit
+        }
+
+        @media (max-width:900px) {
+            .main-container {
+                grid-template-columns: 1fr;
+                padding: 1rem
+            }
+
+            .sidebar {
+                position: relative;
+                height: auto;
+                max-height: 400px
+            }
+
+            .header h2 {
+                font-size: 1.5rem
+            }
+
+            .stat-value {
+                font-size: 2rem
+            }
+        }
+
+        /* Additional styles for Part 2 */
+        .timer-green {
+            color: var(--success);
+        }
+
+        .timer-yellow {
+            color: var(--warning);
+        }
+
+        .timer-red {
+            color: var(--accent);
+        }
+
+        .timer-finished {
+            color: var(--text-dim);
+        }
+    </style>
+</head>
+
+<body>
+    <div id="loader">
+        <div class="loader-text">INITIALIZING IELTS ACADEMY...</div>
+    </div>
+    <div id="canvas-container"></div>
+    <div id="ui-layer">
+        <div class="main-container interactive">
+            <aside class="sidebar glass-panel">
+                <div class="brand" data-i18n="brand">IELTS ACADEMY</div>
+                <div class="translation-toggle" style="margin: 0 0 1rem 0; justify-content: space-between;">
+                    <button class="lang-toggle-btn active" data-lang="en" onclick="app.setLanguage('en')"
+                        style="padding: 0.25rem 0.5rem; font-size: 0.8rem; background:var(--glass); border:1px solid var(--glass-border); color:var(--text); border-radius:8px; cursor:pointer;">EN</button>
+                    <button class="lang-toggle-btn" data-lang="ru" onclick="app.setLanguage('ru')"
+                        style="padding: 0.25rem 0.5rem; font-size: 0.8rem; background:var(--glass); border:1px solid var(--glass-border); color:var(--text); border-radius:8px; cursor:pointer;">RU</button>
+                    <button class="lang-toggle-btn" data-lang="uz" onclick="app.setLanguage('uz')"
+                        style="padding: 0.25rem 0.5rem; font-size: 0.8rem; background:var(--glass); border:1px solid var(--glass-border); color:var(--text); border-radius:8px; cursor:pointer;">UZ</button>
+                </div>
+                <button class="category-btn active" onclick="app.selectCategory('all', this)"><span>🎯</span> <span
+                        data-i18n="allTopics">All Topics</span><span class="category-count">135</span></button>
+                <div id="category-list"></div>
+                <div style="margin-top:auto;padding-top:1rem;border-top:1px solid var(--glass-border)">
+                    <button class="category-btn" onclick="app.showView('stats')"><span>📊</span> <span
+                            data-i18n="statsHistory">Stats & History</span></button>
+                    <button class="category-btn" onclick="app.resetProgress()"
+                        style="color:var(--accent)"><span>🔄</span> <span data-i18n="resetProgress">Reset
+                            Progress</span></button>
+                </div>
+            </aside>
+            <main class="content-area">
+                <header class="header glass-panel">
+                    <div>
+                        <h2 id="header-title" data-i18n="dashboard">Dashboard</h2>
+                        <div style="font-size:.8rem;color:var(--text-dim);margin-top:.3rem" id="header-subtitle"><span
+                                data-i18n="level">Level</span>
+                            <span id="current-level">1</span> • <span id="current-xp">0</span> XP
+                        </div>
+                    </div>
+                    <div class="header-controls"><span id="streak-display">🔥 <span id="streak-count">0</span> <span
+                                data-i18n="days">days</span></span>
+                        <button class="theme-toggle" onclick="app.toggleTheme()" id="theme-btn">🌙</button>
+                    </div>
+                </header>
+                <div class="view-container glass-panel">
+                    <div id="view-dashboard" class="view active">
+                        <h3 data-i18n="welcome">Welcome, Champion! 🏆</h3>
+                        <div class="stats-grid">
+                            <div class="stat-card glass-panel">
+                                <div class="stat-value" id="dash-level">1</div>
+                                <div class="stat-label" data-i18n="level">Level</div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" id="dash-level-progress" style="width:0%"></div>
+                                </div>
+                            </div>
+                            <div class="stat-card glass-panel">
+                                <div class="stat-value" id="dash-answered">0</div>
+                                <div class="stat-label" data-i18n="questionsAnswered">Questions Answered</div>
+                            </div>
+                            <div class="stat-card glass-panel">
+                                <div class="stat-value" id="dash-categories">0/27</div>
+                                <div class="stat-label" data-i18n="categoriesMastered">Categories Mastered</div>
+                            </div>
+                        </div>
+                        <div style="margin-top:2rem">
+                            <h4 data-i18n="startPracticing">Start Practicing</h4>
+                            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1.5rem;margin-top:1rem"
+                                id="campaign-grid"></div>
+                        </div>
+                    </div>
+                    <div id="view-practice" class="view" style="text-align:center;justify-content:center">
+                        <div id="part1-practice-content">
+                            <button onclick="app.showView('dashboard')" class="interactive"
+                                style="position:absolute;top:1rem;left:1rem;background:0 0;border:1px solid var(--glass-border);color:var(--text-dim);padding:.5rem 1rem;border-radius:12px;cursor:pointer">←
+                                <span data-i18n="exit">Exit</span></button>
+                            <div>
+                                <div style="margin-bottom:1.5rem"><span id="p-topic"
+                                        style="color:var(--primary);font-weight:700;letter-spacing:.1em;text-transform:uppercase"
+                                        data-i18n="topic">TOPIC</span>
+                                    <span id="p-campaign" class="campaign-badge"></span>
+                                    <div style="font-size:.8rem;color:var(--text-dim);margin-top:.5rem"><span
+                                            data-i18n="question">Question</span> <span id="p-current">1</span> <span
+                                            data-i18n="of">of</span> <span id="p-total">10</span></div>
+                                    <div class="progress-bar"
+                                        style="max-width:400px;margin:.5rem auto;position:relative">
+                                        <div class="progress-fill" id="p-progress" style="width:0%"></div>
+                                        <div id="checkpoint-markers"></div>
+                                    </div>
+                                </div>
+                                <h2 id="p-question"
+                                    style="font-size:2rem;margin:1rem auto;max-width:700px;line-height:1.3">Loading...
+                                </h2>
+                                <div class="translation-toggle"><button class="lang-btn"
+                                        onclick="app.toggleTranslation('ru', this)">🇷🇺 RU</button> <button
+                                        class="lang-btn" onclick="app.toggleTranslation('uz', this)">🇺🇿 UZ</button>
+                                </div>
+                                <div id="p-translation-ru" class="translation"></div>
+                                <div id="p-translation-uz" class="translation"></div>
+                                <p id="p-hint"
+                                    style="color:var(--text-dim);font-size:1rem;min-height:1.5em;margin:1rem 0"></p>
+                                <div id="visualizer-area" style="width:100%;height:120px;margin:1.5rem 0"></div>
+                                <div class="audio-player" id="audio-player">
+                                    <div data-i18n="yourRecording">Your Recording</div>
+                                    <div class="audio-controls"><button class="audio-btn"
+                                            onclick="app.playRecording()">▶ <span data-i18n="play">Play</span></button>
+                                        <button class="audio-btn" onclick="app.downloadRecording()">⬇ <span
+                                                data-i18n="download">Download</span></button> <button class="audio-btn"
+                                            onclick="app.deleteRecording()" style="background:var(--accent)">🗑 <span
+                                                data-i18n="delete">Delete</span></button>
+                                    </div>
+                                    <div id="recording-duration"
+                                        style="margin-top:.5rem;color:var(--text-dim);font-size:.8rem">0:00</div>
+                                </div>
+                                <div class="interactive"
+                                    style="display:flex;gap:1rem;justify-content:center;margin-top:1.5rem"><button
+                                        onclick="app.toggleHint()"
+                                        style="background:var(--glass);border:1px solid var(--glass-border);color:var(--text);padding:1rem 2rem;border-radius:99px;cursor:pointer">💡
+                                        <span data-i18n="hint">Hint</span></button> <button id="btn-record"
+                                        onclick="app.toggleRecord()"
+                                        style="background:var(--accent);border:none;color:#fff;padding:1rem 3rem;border-radius:99px;font-weight:700;font-size:1.1rem;cursor:pointer;box-shadow:0 0 20px var(--accent)">🎙️
+                                        <span data-i18n="record">Record</span></button> <button
+                                        onclick="app.nextQuestion()"
+                                        style="background:var(--primary);color:#000;border:none;padding:1rem 2rem;border-radius:99px;cursor:pointer;font-weight:700"><span
+                                            data-i18n="next">Next</span> ▶</button></div>
+                            </div>
+                        </div>
+                        <div id="part2-practice-content" style="display:none;">
+                            <button onclick="app.showView('dashboard')" class="interactive"
+                                style="position:absolute;top:1rem;left:1rem;background:0 0;border:1px solid var(--glass-border);color:var(--text-dim);padding:.5rem 1rem;border-radius:12px;cursor:pointer">←
+                                <span data-i18n="exit">Exit</span></button>
+                            <div style="text-align:center; max-width:800px; margin:0 auto;">
+                                <div style="margin-bottom:1.5rem">
+                                    <span id="part2-topic"
+                                        style="color:var(--primary);font-weight:700;letter-spacing:.1em;text-transform:uppercase"
+                                        data-i18n="topic">TOPIC</span>
+                                    <span id="part2-campaign" class="campaign-badge"></span>
+                                    <div style="font-size:.8rem;color:var(--text-dim);margin-top:.5rem"><span
+                                            data-i18n="question">Question</span> <span id="part2-current">1</span> <span
+                                            data-i18n="of">of</span> <span id="part2-total">10</span></div>
+                                    <div class="progress-bar"
+                                        style="max-width:400px;margin:.5rem auto;position:relative">
+                                        <div class="progress-fill" id="part2-progress" style="width:0%"></div>
+                                    </div>
+                                </div>
+
+                                <div class="glass-panel" style="padding:2rem; margin-bottom:2rem; text-align:left;">
+                                    <h3 id="part2-title"
+                                        style="font-size:1.5rem; margin-bottom:1rem; color:var(--text);">Describe a...
+                                    </h3>
+                                    <div style="margin-bottom:1rem; color:var(--text-dim);">You should say:</div>
+                                    <div id="part2-bullets"
+                                        style="margin-bottom:1.5rem; padding-left:1.5rem; line-height:1.6;"></div>
+
+                                    <div class="translation-toggle" style="justify-content:flex-start;">
+                                        <button class="lang-btn" onclick="app.toggleTranslation('ru', this)">🇷🇺
+                                            RU</button>
+                                        <button class="lang-btn" onclick="app.toggleTranslation('uz', this)">🇺🇿
+                                            UZ</button>
+                                    </div>
+                                    <div id="part2-translation-ru" class="translation" style="text-align:left;"></div>
+                                    <div id="part2-translation-uz" class="translation" style="text-align:left;"></div>
+                                </div>
+
+                                <div id="part2-timer-area" style="margin-bottom:2rem;">
+                                    <div id="part2-timer-display"
+                                        style="font-size:2.5rem; font-weight:900; margin-bottom:1rem; transition:color 0.3s;"
+                                        onclick="app.togglePart2Timer()" class="interactive">0:00</div>
+                                    <div style="display:flex; gap:1rem; justify-content:center;">
+                                        <button onclick="app.togglePart2Timer()"
+                                            style="background:var(--glass); border:1px solid var(--glass-border); color:var(--text); padding:0.5rem 1rem; border-radius:8px; cursor:pointer;"
+                                            data-i18n="skipPhase">Skip Phase</button>
+                                    </div>
+                                </div>
+
+                                <details </ul>
+
+                                    <div style="display:flex; gap:1rem; flex-wrap:wrap; margin-bottom:1rem;">
+                                        <button onclick="app.togglePart3Content('templates')" class="part3-toggle-btn"
+                                            style="background:var(--glass); border:1px solid var(--glass-border); color:var(--text); padding:0.5rem 1rem; border-radius:8px; cursor:pointer;">📝
+                                            Templates</button>
+                                        <button onclick="app.togglePart3Content('vocabulary')" class="part3-toggle-btn"
+                                            style="background:var(--glass); border:1px solid var(--glass-border); color:var(--text); padding:0.5rem 1rem; border-radius:8px; cursor:pointer;">📚
+                                            Vocabulary</button>
+                                        <button onclick="app.togglePart3Content('sample')" class="part3-toggle-btn"
+                                            style="background:var(--glass); border:1px solid var(--glass-border); color:var(--text); padding:0.5rem 1rem; border-radius:8px; cursor:pointer;">💡
+                                            Sample Answer</button>
+                                    </div>
+
+                                    <div id="part3-templates" class="part3-hidden-content"
+                                        style="display:none; background:rgba(255,255,255,0.03); padding:1rem; border-radius:12px; margin-bottom:1rem;">
+                                        <h4 style="color:var(--text-dim); margin-bottom:0.5rem;">Useful
+                                            Phrases</h4>
+                                        <ul id="part3-templates-list"
+                                            style="padding-left:1.5rem; color:var(--text-dim);"></ul>
+                                    </div>
+
+                                    <div id="part3-vocabulary" class="part3-hidden-content"
+                                        style="display:none; background:rgba(255,255,255,0.03); padding:1rem; border-radius:12px; margin-bottom:1rem;">
+                                        <h4 style="color:var(--text-dim); margin-bottom:0.5rem;">Key
+                                            Vocabulary</h4>
+                                        <ul id="part3-vocab-list" style="padding-left:1.5rem; color:var(--text-dim);">
+                                        </ul>
+                                    </div>
+
+                                    <div id="part3-sample" class="part3-hidden-content"
+                                        style="display:none; background:rgba(255,255,255,0.03); padding:1rem; border-radius:12px; margin-bottom:1rem;">
+                                        <h4 style="color:var(--text-dim); margin-bottom:0.5rem;">Sample
+                                            Answer</h4>
+                                        <p id="part3-sample-text" style="color:var(--text-dim); line-height:1.6;"></p>
+                                    </div>
+                            </div>
+
+                            <div id="part3-timer-area" style="margin-bottom:2rem;">
+                                <div id="part3-timer-display"
+                                    style="font-size:2.5rem; font-weight:900; margin-bottom:1rem;">0:00
+                                </div>
+                            </div>
+
+                            <button onclick="app.finishPractice()"
+                                style="background:var(--success); color:#000; border:none; padding:1rem 3rem; border-radius:99px; cursor:pointer; font-weight:700; font-size:1.2rem; box-shadow:0 0 20px var(--success);">
+                                <span>Finish Practice</span> 🏁
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="view-stats" class="view" style="overflow-y:auto">
+                    <h3 data-i18n="statsHistory">Your Progress & History 📊</h3>
+                    <div class="stats-grid">
+                        <div class="stat-card glass-panel">
+                            <div class="stat-value" id="stats-total">0</div>
+                            <div class="stat-label" data-i18n="totalQuestions">Total Questions</div>
+                        </div>
+                        <div class="stat-card glass-panel">
+                            <div class="stat-value" id="stats-time">0m</div>
+                            <div class="stat-label" data-i18n="totalTime">Total Time</div>
+                        </div>
+                        <div class="stat-card glass-panel">
+                            <div class="stat-value" id="stats-streak">0</div>
+                            <div class="stat-label" data-i18n="bestStreak">Best Streak</div>
+                        </div>
+                    </div>
+                    <div style="margin-top:2rem">
+                        <h4 data-i18n="visitHistory">Visit History</h4>
+                        <div id="history-list" style="margin-top:1rem"></div>
+                    </div>
+                    <div style="margin-top:2rem">
+                        <h4 data-i18n="categoryProgress">Category Progress</h4>
+                        <div id="category-progress" style="margin-top:1rem"></div>
+                    </div>
+                </div>
+        </div>
+        </main>
+    </div>
+    </div>
+    <script src="data.js"></script>
+    <script src="telegram-auth.js"></script>
+    <script src="app.js"></script>
+    <script>
+        console.log('[Init] Starting app initialization from inline script');
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeApp);
+        } else {
+            initializeApp();
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,69 @@
+{
+    "name": "IELTS Speaking Academy",
+    "short_name": "IELTS Academy",
+    "description": "Practice IELTS Speaking Part 1, 2, 3 with AI-powered feedback",
+    "start_url": "/",
+    "scope": "/",
+    "display": "standalone",
+    "orientation": "portrait",
+    "background_color": "#0a0e27",
+    "theme_color": "#00f5ff",
+    "icons": [
+        {
+            "src": "/icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ],
+    "shortcuts": [
+        {
+            "name": "Part 1 Practice",
+            "short_name": "Part 1",
+            "description": "Start Part 1 practice session",
+            "url": "/?part=1",
+            "icons": [
+                {
+                    "src": "/icon-192.png",
+                    "sizes": "192x192"
+                }
+            ]
+        },
+        {
+            "name": "Part 2 Cue Cards",
+            "short_name": "Part 2",
+            "description": "Practice with cue cards",
+            "url": "/?part=2",
+            "icons": [
+                {
+                    "src": "/icon-192.png",
+                    "sizes": "192x192"
+                }
+            ]
+        },
+        {
+            "name": "Part 3 Discussion",
+            "short_name": "Part 3",
+            "description": "Discussion practice",
+            "url": "/?part=3",
+            "icons": [
+                {
+                    "src": "/icon-192.png",
+                    "sizes": "192x192"
+                }
+            ]
+        }
+    ],
+    "categories": [
+        "education",
+        "productivity"
+    ],
+    "lang": "en-US",
+    "dir": "ltr"
+}
