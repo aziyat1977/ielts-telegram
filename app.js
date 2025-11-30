@@ -864,6 +864,8 @@ class IELTSApp {
     }
 
     renderPart2CueCard() {
+        console.log('[Part 2] Rendering cue card, topics available:', part2Topics ? part2Topics.length : 'UNDEFINED');
+
         // Hide Part 1 view, show Part 2 view
         const part1View = document.getElementById('part1-practice-content');
         const part2View = document.getElementById('part2-practice-content');
@@ -871,14 +873,19 @@ class IELTSApp {
         if (part2View) part2View.style.display = 'block';
 
         const topic = this.state.part2List[this.state.part2Index];
-        if (!topic) return;
+        console.log('[Part 2] Current topic:', topic);
 
-        const categoryMeta = part2Categories[topic.category] || { name: 'Topic', campaign: 'intermediate' };
+        if (!topic) {
+            console.error('[Part 2] No topic found at index', this.state.part2Index);
+            return;
+        }
 
-        // Update header elements
-        document.getElementById('part2-topic').textContent = categoryMeta.name;
-        document.getElementById('part2-campaign').textContent = topic.difficulty.toUpperCase();
-        document.getElementById('part2-campaign').className = `campaign-badge campaign-${topic.difficulty}`;
+        const categoryMeta = part2Categories ? part2Categories[topic.category] : null;
+        console.log('[Part 2] Category meta:', categoryMeta);
+
+        // Update title elements (both of them!)
+        document.getElementById('part2-title').textContent = topic.title;
+        document.getElementById('part2-cue-title').textContent = topic.title;
 
         // Update progress
         document.getElementById('part2-current').textContent = this.state.part2Index + 1;
@@ -886,14 +893,13 @@ class IELTSApp {
         const progress = ((this.state.part2Index + 1) / this.state.part2List.length) * 100;
         document.getElementById('part2-progress').style.width = progress + '%';
 
-        // Render cue card
-        document.getElementById('part2-title').textContent = topic.title;
+        // Render cue card bullets
         const bullets = topic.bullets.map(b => `<li>${b}</li>`).join('');
         document.getElementById('part2-bullets').innerHTML = `<ul>${bullets}</ul>`;
 
         // Translations
-        document.getElementById('part2-translation-ru').textContent = topic.ru;
-        document.getElementById('part2-translation-uz').textContent = topic.uz;
+        document.getElementById('part2-translation-ru').textContent = topic.ru || '';
+        document.getElementById('part2-translation-uz').textContent = topic.uz || '';
 
         // Reset timer
         this.resetPart2Timer();
